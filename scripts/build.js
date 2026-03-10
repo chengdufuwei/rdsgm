@@ -1,0 +1,684 @@
+﻿const fs = require('fs');
+const path = require('path');
+
+const root = path.resolve(__dirname, '..');
+const src = path.join(root, 'src');
+const dist = path.join(root, 'dist');
+const perPage = 5;
+const defaultImage = '/assets/cover-seo.svg';
+const sectionIconMap = {
+  about: 'section-location',
+  scenery: 'section-landscape',
+  pricing: 'section-pricing',
+  process: 'section-process',
+  service: 'section-service',
+  faq: 'section-faq',
+  contact: 'section-contact'
+};
+const quickHighlights = [
+  { icon: 'quick-visit', title: '实地考察免费', text: '到园看墓前可先电话预约，现场沟通更直接。' },
+  { icon: 'quick-guide', title: '全程陪同讲解', text: '围绕园区、分区、墓型和路线安排逐项说明。' },
+  { icon: 'quick-offer', title: '预算比较清楚', text: '帮助家属先建立墓型价格和预算区间认知。' },
+  { icon: 'quick-service', title: '一对一咨询', text: '看墓、办理和安葬问题统一对接，不必反复转述。' },
+  { icon: 'quick-answer', title: '常见问题答疑', text: '围绕材料准备、碑文确认和安葬时间集中整理。' }
+];
+
+const site = readJson(path.join(src, 'data', 'site.json'));
+const news = readJson(path.join(src, 'data', 'news.json')).sort((a, b) => new Date(b.date) - new Date(a.date));
+const styles = fs.readFileSync(path.join(src, 'assets', 'styles.css'), 'utf8');
+const lastModified = news.length ? news[0].date : new Date().toISOString().slice(0, 10);
+
+rimraf(dist);
+fs.mkdirSync(dist, { recursive: true });
+writeFile(path.join(dist, 'assets', 'styles.css'), styles);
+writeFile(path.join(dist, 'assets', 'cover-seo.svg'), renderCoverSvg());
+writeGeneratedIcons();
+writeFile(path.join(dist, 'robots.txt'), renderRobots());
+writeFile(path.join(dist, 'feed.xml'), renderFeed());
+writeFile(path.join(dist, '404.html'), renderNotFound());
+
+const sectionCards = site.sections.filter(section => section.slug !== 'contact');
+
+writePage('/', renderHome());
+for (const section of site.sections) writePage(`/${section.slug}/`, renderSection(section));
+renderNewsIndex();
+renderNewsDetails();
+writeFile(path.join(dist, 'sitemap.xml'), renderSitemap());
+
+function readJson(file) {
+  return JSON.parse(fs.readFileSync(file, 'utf8').replace(/^\uFEFF/, ''));
+}
+
+function rimraf(dir) {
+  if (!fs.existsSync(dir)) return;
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const target = path.join(dir, entry.name);
+    if (entry.isDirectory()) rimraf(target); else fs.unlinkSync(target);
+  }
+  fs.rmdirSync(dir);
+}
+
+function writeFile(file, content) {
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, content, 'utf8');
+}
+
+function writePage(route, html) {
+  const out = route === '/' ? path.join(dist, 'index.html') : path.join(dist, route, 'index.html');
+  writeFile(out, html);
+}
+
+function trimSlash(value) {
+  return String(value).replace(/\/$/, '');
+}
+
+function pageUrl(route) {
+  if (route === '/') return `${trimSlash(site.domain)}/`;
+  return `${trimSlash(site.domain)}${route}`;
+}
+
+function assetUrl(file) {
+  return `${trimSlash(site.domain)}/assets/${file}`;
+}
+
+function normalizeDate(date) {
+  return new Date(`${date}T08:00:00+08:00`).toISOString();
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function serializeJsonLd(value) {
+  return JSON.stringify(value).replace(/</g, '\\u003c');
+}
+
+function phoneHref(phone) {
+  return `tel:${String(phone).replace(/[^\d+]/g, '')}`;
+}
+
+function renderPhoneLink({ phone = site.phone, label = phone, className = '' }) {
+  const classAttr = className ? ` class="${className}"` : '';
+  return `<a${classAttr} href="${escapeHtml(phoneHref(phone))}">${escapeHtml(label)}</a>`;
+}
+
+function linkifyPhoneText(text) {
+  return escapeHtml(text).replaceAll(
+    escapeHtml(site.phone),
+    renderPhoneLink({ label: site.phone })
+  );
+}
+
+function relative(fromRoute, toRoute) {
+  const fromSegments = (fromRoute === '/' ? '/' : `${fromRoute}`).split('/').filter(Boolean);
+  const toSegments = toRoute.split('/').filter(Boolean);
+  let i = 0;
+  while (i < fromSegments.length && i < toSegments.length && fromSegments[i] === toSegments[i]) i++;
+  const up = new Array(Math.max(fromSegments.length - i, 0)).fill('..');
+  const down = toSegments.slice(i);
+  return [...up, ...down].join('/') || '.';
+}
+
+function buildKeywords(route, extra = []) {
+  const base = [site.siteName, `${site.city}公墓`, '燃灯寺公墓', '公墓预约', '陵园资讯'];
+  const dynamic = route.startsWith('/news/') ? news.map(item => item.category) : site.sections.map(section => section.title);
+  return Array.from(new Set(base.concat(dynamic, extra).filter(Boolean))).join(',');
+}
+
+function baseSchemas(route, title, description, breadcrumbs) {
+  const schemas = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Organization',
+      name: site.siteName,
+      url: pageUrl('/'),
+      telephone: site.phone,
+      address: {
+        '@type': 'PostalAddress',
+        addressLocality: site.city,
+        streetAddress: site.address,
+        addressCountry: 'CN'
+      }
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: site.siteName,
+      url: pageUrl('/'),
+      description,
+      inLanguage: 'zh-CN'
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'WebPage',
+      name: title,
+      url: pageUrl(route),
+      description,
+      inLanguage: 'zh-CN'
+    }
+  ];
+
+  if (breadcrumbs.length) {
+    schemas.push({
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: breadcrumbs.map((crumb, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        name: crumb.label,
+        item: pageUrl(crumb.href)
+      }))
+    });
+  }
+
+  return schemas;
+}
+
+function renderLayout({ title, description, route, body, breadcrumbs = [], keywords = '', type = 'website', extraHead = '', schemas = [] }) {
+  const nav = site.navigation.map(item => `<a href="${relative(route, item.href)}"${item.href === route ? ' class="active"' : ''}>${item.label}</a>`).join('');
+  const crumbHtml = breadcrumbs.length
+    ? `<div class="container breadcrumb">${breadcrumbs.map((crumb, idx) => idx === breadcrumbs.length - 1 ? `<span>${crumb.label}</span>` : `<a href="${relative(route, crumb.href)}">${crumb.label}</a>`).join(' / ')}</div>`
+    : '';
+  const schemaBlocks = schemas.map(schema => `<script type="application/ld+json">${serializeJsonLd(schema)}</script>`).join('\n  ');
+  return `<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${escapeHtml(title)}</title>
+  <meta name="description" content="${escapeHtml(description)}">
+  <meta name="keywords" content="${escapeHtml(keywords)}">
+  <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
+  <meta name="author" content="${escapeHtml(site.siteName)}">
+  <link rel="canonical" href="${pageUrl(route)}">
+  <link rel="alternate" type="application/rss+xml" title="${escapeHtml(site.siteName)} 新闻资讯" href="${pageUrl('/feed.xml')}">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="${type}">
+  <meta property="og:site_name" content="${escapeHtml(site.siteName)}">
+  <meta property="og:title" content="${escapeHtml(title)}">
+  <meta property="og:description" content="${escapeHtml(description)}">
+  <meta property="og:url" content="${pageUrl(route)}">
+  <meta property="og:image" content="${pageUrl(defaultImage)}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${escapeHtml(title)}">
+  <meta name="twitter:description" content="${escapeHtml(description)}">
+  <meta name="theme-color" content="#8a2e1d">
+  <link rel="stylesheet" href="${relative(route, '/assets/styles.css')}">
+  ${extraHead}
+  ${schemaBlocks}
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-row">
+      <a class="brand" href="${relative(route, '/')}" aria-label="${escapeHtml(site.siteName)}">
+        <strong>${escapeHtml(site.siteName)}</strong>
+        <span>${escapeHtml(site.tagline)}</span>
+      </a>
+      <nav class="nav">${nav}</nav>
+    </div>
+  </header>
+  ${crumbHtml}
+  ${body}
+  <footer class="site-footer">
+    <div class="container footer-panel">
+      <div>
+        <strong>${escapeHtml(site.siteName)}</strong><br>
+        <span>${escapeHtml(site.address)}</span>
+      </div>
+      <div>
+        预约热线<br>
+        <strong style="color:var(--brand-deep);font-size:1.15rem;">${renderPhoneLink({ className: 'phone-link' })}</strong>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>`;
+}
+
+function renderHome() {
+  const latest = news.slice(0, 3).map(item => `
+    <article class="news-card">
+      <div class="news-meta"><span class="badge">${escapeHtml(item.category)}</span><time datetime="${escapeHtml(item.date)}">${escapeHtml(item.date)}</time></div>
+      <h3><a href="${relative('/', `/news/${item.slug}/`)}">${escapeHtml(item.title)}</a></h3>
+      <p>${escapeHtml(item.summary)}</p>
+      <a class="read-more" href="${relative('/', `/news/${item.slug}/`)}">阅读全文</a>
+    </article>`).join('');
+
+  const cards = sectionCards.map(section => `
+    <article class="card">
+      <img class="card-icon" src="${relative('/', `/assets/${sectionIconMap[section.slug] || 'section-service'}.svg`)}" alt="${escapeHtml(section.title)}图标" width="72" height="72">
+      <span class="badge">栏目</span>
+      <h3>${escapeHtml(section.title)}</h3>
+      <p>${escapeHtml(section.description)}</p>
+      <a class="card-link" href="${relative('/', `/${section.slug}/`)}">查看栏目</a>
+    </article>`).join('');
+  const quickCards = quickHighlights.map(item => `
+    <article class="quick-card">
+      <img class="quick-icon" src="${relative('/', `/assets/${item.icon}.svg`)}" alt="${escapeHtml(item.title)}图标" width="56" height="56">
+      <h3>${escapeHtml(item.title)}</h3>
+      <p>${escapeHtml(item.text)}</p>
+    </article>`).join('');
+
+  return renderLayout({
+    title: site.seo.title,
+    description: site.seo.description,
+    route: '/',
+    keywords: buildKeywords('/', ['新闻资讯', '购墓流程', '墓型价格']),
+    schemas: baseSchemas('/', site.seo.title, site.seo.description, []),
+    body: `
+      <section class="hero">
+        <div class="container hero-grid">
+          <div class="hero-copy">
+            <div class="eyebrow">成都 · 龙泉驿区</div>
+            <h1>燃灯寺公墓预约服务中心</h1>
+            <p class="lead">燃灯寺公墓位于成都龙泉驿区，面向本地及周边家庭提供预约看墓、路线咨询、墓型介绍、安葬流程说明和后续服务指引，方便用户快速了解园区信息与咨询方式。</p>
+            <div class="hero-actions">
+              <a class="btn btn-primary" href="${escapeHtml(phoneHref(site.phone))}">电话咨询 ${escapeHtml(site.phone)}</a>
+              <a class="btn btn-secondary" href="${relative('/', '/news/')}">查看新闻资讯</a>
+            </div>
+          </div>
+          <aside class="hero-panel">
+            <h2>燃灯寺公墓服务概览</h2>
+            <ul class="meta-list">
+              <li>提供预约看墓、路线咨询、墓型介绍与一对一沟通服务。</li>
+              <li>围绕园区介绍、景观展示、价格咨询、流程说明等内容做清晰分类。</li>
+              <li>保留联系电话与联系地址，方便用户快速咨询和到访了解。</li>
+              <li>持续发布新闻资讯与问答内容，帮助用户了解园区动态和常见问题。</li>
+            </ul>
+          </aside>
+        </div>
+      </section>
+      <section class="section">
+        <div class="container section-head">
+          <div>
+            <h2>服务亮点</h2>
+            <p>参考原站的图标化表达方式，把核心服务能力改成更直观的可视化入口。</p>
+          </div>
+        </div>
+        <div class="container quick-grid">${quickCards}</div>
+      </section>
+      <section class="section">
+        <div class="container section-head">
+          <div>
+            <h2>核心栏目</h2>
+            <p>围绕园区介绍、景观展示、价格咨询、流程说明和问答资讯等内容进行清晰整理。</p>
+          </div>
+        </div>
+        <div class="container grid-3">${cards}</div>
+      </section>
+      <section class="section">
+        <div class="container section-head">
+          <div>
+            <h2>最新新闻</h2>
+            <p>持续整理园区动态、安葬指南、选墓建议和常见问答，方便用户了解最新内容。</p>
+          </div>
+          <a class="btn btn-secondary" href="${relative('/', '/news/')}">查看全部新闻</a>
+        </div>
+        <div class="container news-list">${latest}</div>
+      </section>`
+  });
+}
+
+function renderSection(section) {
+  const route = `/${section.slug}/`;
+  const breadcrumbs = [{ label: '首页', href: '/' }, { label: section.title, href: route }];
+  const pricingBlock = section.slug === 'pricing' && Array.isArray(section.priceItems)
+    ? `<div class="pricing-shell">
+        <div class="pricing-list">
+          ${section.priceItems.map(item => `<article class="pricing-item"><div class="pricing-name">${escapeHtml(item.name)}</div><div class="pricing-value">${escapeHtml(item.price)}</div></article>`).join('')}
+        </div>
+        ${Array.isArray(section.priceNotice) ? `<div class="pricing-note">${section.priceNotice.map(line => `<p>${linkifyPhoneText(line)}</p>`).join('')}</div>` : ''}
+      </div>`
+    : '';
+  const faqBlock = section.slug === 'faq'
+    ? `<div class="faq-list">${[
+      ['死亡证明怎么办理？', '建议先确认医院、社区或公安系统出具证明的流程，再与殡仪及安葬安排衔接。'],
+      ['预约看墓要准备什么？', '可以先明确预算、看墓时间和想了解的墓型，再电话预约提高效率。'],
+      ['碑文刻字什么时候沟通？', '建议在选定墓型并确认安葬时间后尽早沟通，避免影响后续安排。']
+    ].map(([q, a]) => `<article class="faq-item"><h3>${escapeHtml(q)}</h3><p>${escapeHtml(a)}</p></article>`).join('')}</div>`
+    : '';
+
+  return renderLayout({
+    title: `${section.title}_${site.siteName}`,
+    description: section.description,
+    route,
+    breadcrumbs,
+    keywords: buildKeywords(route, [section.title]),
+    schemas: baseSchemas(route, `${section.title}_${site.siteName}`, section.description, breadcrumbs),
+    body: `
+      <section class="page-hero">
+        <div class="container">
+          <div class="section-shell">
+            <div class="eyebrow">${escapeHtml(site.city)} · ${escapeHtml(section.title)}</div>
+            <h1>${escapeHtml(section.title)}</h1>
+            <p class="lead">${escapeHtml(section.description)}</p>
+          </div>
+        </div>
+      </section>
+      <section class="page-body">
+        <div class="container">
+          <article class="section-shell section-content">
+            ${section.content.map(paragraph => `<p>${linkifyPhoneText(paragraph)}</p>`).join('')}
+            ${pricingBlock}
+            ${faqBlock}
+            <div class="cta">预约看墓与咨询请直接联系<strong>${renderPhoneLink({ label: site.phone })}</strong></div>
+          </article>
+        </div>
+      </section>`
+  });
+}
+
+function renderNewsIndex() {
+  const totalPages = Math.max(1, Math.ceil(news.length / perPage));
+  for (let page = 1; page <= totalPages; page++) {
+    const route = page === 1 ? '/news/' : `/news/page/${page}/`;
+    const title = page === 1 ? `新闻资讯_${site.siteName}` : `新闻资讯第 ${page} 页_${site.siteName}`;
+    const description = page === 1 ? '汇总燃灯寺公墓相关资讯、安葬指南、选墓建议和常见问答内容。' : `新闻资讯第 ${page} 页，继续浏览燃灯寺公墓相关内容。`;
+    const chunk = news.slice((page - 1) * perPage, page * perPage);
+    const breadcrumbs = [{ label: '首页', href: '/' }, { label: '新闻资讯', href: '/news/' }];
+    const cards = chunk.map(item => `
+      <article class="news-card">
+        <div class="news-meta"><span class="badge">${escapeHtml(item.category)}</span><time datetime="${escapeHtml(item.date)}">${escapeHtml(item.date)}</time></div>
+        <h3><a href="${relative(route, `/news/${item.slug}/`)}">${escapeHtml(item.title)}</a></h3>
+        <p>${escapeHtml(item.summary)}</p>
+        <a class="read-more" href="${relative(route, `/news/${item.slug}/`)}">阅读全文</a>
+      </article>`).join('');
+    const prevHref = page > 1 ? (page === 2 ? '/news/' : `/news/page/${page - 1}/`) : '';
+    const nextHref = page < totalPages ? `/news/page/${page + 1}/` : '';
+    const extraHead = `${prevHref ? `<link rel="prev" href="${pageUrl(prevHref)}">` : ''}${nextHref ? `\n  <link rel="next" href="${pageUrl(nextHref)}">` : ''}`;
+
+    writePage(route, renderLayout({
+      title,
+      description,
+      route,
+      breadcrumbs,
+      keywords: buildKeywords(route, ['新闻资讯', `第${page}页`]),
+      extraHead,
+      schemas: baseSchemas(route, title, description, breadcrumbs),
+      body: `
+        <section class="page-hero">
+          <div class="container">
+            <div class="section-shell">
+              <div class="eyebrow">燃灯寺资讯</div>
+              <h1>新闻资讯${page > 1 ? ` · 第 ${page} 页` : ''}</h1>
+              <p class="lead">持续整理园区动态、安葬指南、选墓建议和常见问答，方便用户按时间顺序浏览了解。</p>
+            </div>
+          </div>
+        </section>
+        <section class="page-body">
+          <div class="container news-list">${cards}${renderPagination(totalPages, page, route)}</div>
+        </section>`
+    }));
+  }
+}
+
+function renderNewsDetails() {
+  news.forEach((item, index) => {
+    const route = `/news/${item.slug}/`;
+    const title = `${item.title}_${site.siteName}`;
+    const breadcrumbs = [{ label: '首页', href: '/' }, { label: '新闻资讯', href: '/news/' }, { label: item.title, href: route }];
+    const articleSchemas = baseSchemas(route, title, item.summary, breadcrumbs);
+    articleSchemas.push({
+      '@context': 'https://schema.org',
+      '@type': 'NewsArticle',
+      headline: item.title,
+      datePublished: normalizeDate(item.date),
+      dateModified: normalizeDate(item.date),
+      author: { '@type': 'Organization', name: site.siteName },
+      publisher: { '@type': 'Organization', name: site.siteName },
+      image: [pageUrl(defaultImage)],
+      mainEntityOfPage: pageUrl(route),
+      description: item.summary,
+      articleSection: item.category,
+      articleBody: item.content.join(' '),
+      inLanguage: 'zh-CN'
+    });
+
+    const prev = news[index + 1];
+    const next = news[index - 1];
+
+    writePage(route, renderLayout({
+      title,
+      description: item.summary,
+      route,
+      breadcrumbs,
+      keywords: buildKeywords(route, [item.category, item.title]),
+      type: 'article',
+      extraHead: `<meta property="article:published_time" content="${normalizeDate(item.date)}">\n  <meta property="article:modified_time" content="${normalizeDate(item.date)}">`,
+      schemas: articleSchemas,
+      body: `
+      <section class="page-hero">
+        <div class="container">
+          <div class="section-shell">
+            <div class="news-meta"><span class="badge">${escapeHtml(item.category)}</span><time datetime="${escapeHtml(item.date)}">${escapeHtml(item.date)}</time></div>
+            <h1>${escapeHtml(item.title)}</h1>
+            <p class="lead">${escapeHtml(item.summary)}</p>
+          </div>
+        </div>
+      </section>
+      <section class="page-body">
+        <div class="container">
+          <article class="article-shell article-content">
+            ${item.content.map(paragraph => `<p>${escapeHtml(paragraph)}</p>`).join('')}
+            <div class="cta">预约与咨询电话<strong>${renderPhoneLink({ label: site.phone })}</strong></div>
+          </article>
+          <div class="section" style="padding-top:16px;">
+            <div class="news-list">
+              ${prev ? `<article class="news-card"><div class="news-meta"><span>上一篇</span></div><h3><a href="${relative(route, `/news/${prev.slug}/`)}">${escapeHtml(prev.title)}</a></h3></article>` : ''}
+              ${next ? `<article class="news-card"><div class="news-meta"><span>下一篇</span></div><h3><a href="${relative(route, `/news/${next.slug}/`)}">${escapeHtml(next.title)}</a></h3></article>` : ''}
+            </div>
+          </div>
+        </div>
+      </section>`
+    }));
+  });
+}
+
+function renderPagination(totalPages, currentPage, currentRoute) {
+  if (totalPages <= 1) return '';
+  const links = [];
+  for (let page = 1; page <= totalPages; page++) {
+    const href = page === 1 ? '/news/' : `/news/page/${page}/`;
+    links.push(page === currentPage ? `<span class="current">${page}</span>` : `<a href="${relative(currentRoute, href)}">${page}</a>`);
+  }
+  return `<div class="pagination" aria-label="新闻分页">${links.join('')}</div>`;
+}
+
+function renderSitemap() {
+  const articleDates = new Map(news.map(item => [`/news/${item.slug}/`, item.date]));
+  const urls = ['/']
+    .concat(site.sections.map(section => `/${section.slug}/`))
+    .concat(['/news/', '/feed.xml'])
+    .concat(news.map(item => `/news/${item.slug}/`))
+    .concat(Array.from({ length: Math.max(0, Math.ceil(news.length / perPage) - 1) }, (_, idx) => `/news/page/${idx + 2}/`));
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(url => `  <url><loc>${pageUrl(url)}</loc><lastmod>${normalizeDate(articleDates.get(url) || lastModified)}</lastmod></url>`).join('\n')}\n</urlset>`;
+}
+
+function renderFeed() {
+  const items = news.slice(0, 20).map(item => `
+    <item>
+      <title><![CDATA[${item.title}]]></title>
+      <link>${pageUrl(`/news/${item.slug}/`)}</link>
+      <guid>${pageUrl(`/news/${item.slug}/`)}</guid>
+      <pubDate>${new Date(normalizeDate(item.date)).toUTCString()}</pubDate>
+      <description><![CDATA[${item.summary}]]></description>
+    </item>`).join('');
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title><![CDATA[${site.siteName} 新闻资讯]]></title>
+    <link>${pageUrl('/')}</link>
+    <description><![CDATA[${site.seo.description}]]></description>
+    <language>zh-cn</language>
+    <lastBuildDate>${new Date(normalizeDate(lastModified)).toUTCString()}</lastBuildDate>${items}
+  </channel>
+</rss>`;
+}
+
+function renderCoverSvg() {
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="${escapeHtml(site.siteName)}">`
+    + `<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fff5e7"/><stop offset="100%" stop-color="#efe0bf"/></linearGradient></defs>`
+    + `<rect width="1200" height="630" fill="url(#g)"/>`
+    + `<circle cx="1020" cy="140" r="160" fill="rgba(138,46,29,0.08)"/>`
+    + `<circle cx="180" cy="520" r="200" fill="rgba(215,182,118,0.22)"/>`
+    + `<text x="88" y="220" font-family="Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="34" fill="#8a2e1d">燃灯寺公墓</text>`
+    + `<text x="88" y="320" font-family="Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="74" font-weight="700" fill="#1f1b17">${escapeHtml(site.siteName)}</text>`
+    + `<text x="88" y="392" font-family="Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="30" fill="#6f6459">${escapeHtml(site.tagline)}</text>`
+    + `<text x="88" y="482" font-family="Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="32" fill="#642014">咨询电话 ${escapeHtml(site.phone)}</text>`
+    + `</svg>`;
+}
+
+function writeGeneratedIcons() {
+  const icons = {
+    'section-location.svg': renderGeneratedIcon({
+      shape: 'pin',
+      label: '园',
+      accent: '#8a2e1d',
+      soft: '#f6dfcf'
+    }),
+    'section-landscape.svg': renderGeneratedIcon({
+      shape: 'mountain',
+      label: '景',
+      accent: '#6c7d43',
+      soft: '#e9efd2'
+    }),
+    'section-pricing.svg': renderGeneratedIcon({
+      shape: 'coin',
+      label: '价',
+      accent: '#a56a18',
+      soft: '#f6e7c8'
+    }),
+    'section-process.svg': renderGeneratedIcon({
+      shape: 'path',
+      label: '程',
+      accent: '#475f8f',
+      soft: '#dde7fb'
+    }),
+    'section-service.svg': renderGeneratedIcon({
+      shape: 'shield',
+      label: '服',
+      accent: '#7a4a74',
+      soft: '#f0dff1'
+    }),
+    'section-faq.svg': renderGeneratedIcon({
+      shape: 'bubble',
+      label: '问',
+      accent: '#2f6f71',
+      soft: '#d9efef'
+    }),
+    'section-contact.svg': renderGeneratedIcon({
+      shape: 'phone',
+      label: '约',
+      accent: '#8a2e1d',
+      soft: '#f7e3d5'
+    }),
+    'quick-visit.svg': renderGeneratedIcon({
+      shape: 'compass',
+      label: '访',
+      accent: '#8a2e1d',
+      soft: '#f7e3d5'
+    }),
+    'quick-guide.svg': renderGeneratedIcon({
+      shape: 'guide',
+      label: '陪',
+      accent: '#5f6e37',
+      soft: '#ebf1d8'
+    }),
+    'quick-offer.svg': renderGeneratedIcon({
+      shape: 'ribbon',
+      label: '惠',
+      accent: '#9a6221',
+      soft: '#f7e8cb'
+    }),
+    'quick-service.svg': renderGeneratedIcon({
+      shape: 'star',
+      label: '专',
+      accent: '#51688b',
+      soft: '#e2ebfb'
+    }),
+    'quick-answer.svg': renderGeneratedIcon({
+      shape: 'lamp',
+      label: '答',
+      accent: '#7d4f2d',
+      soft: '#f2e4d4'
+    })
+  };
+
+  for (const [file, content] of Object.entries(icons)) {
+    writeFile(path.join(dist, 'assets', file), content);
+  }
+}
+
+function renderGeneratedIcon({ shape, label, accent, soft }) {
+  const base = `<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96" role="img" aria-label="${escapeHtml(label)}图标">`
+    + `<rect x="6" y="6" width="84" height="84" rx="28" fill="${soft}"/>`
+    + `<circle cx="48" cy="48" r="24" fill="${accent}" opacity="0.12"/>`;
+  const mark = renderIconShape(shape, accent);
+  return `${base}${mark}</svg>`;
+}
+
+function renderIconShape(shape, accent) {
+  switch (shape) {
+    case 'pin':
+      return `<path d="M48 21c-8.1 0-14.5 5.9-14.5 13.8C33.5 46 48 60 48 60s14.5-14 14.5-25.2C62.5 26.9 56.1 21 48 21Zm0 18.4a4.7 4.7 0 1 1 0-9.4 4.7 4.7 0 0 1 0 9.4Z" fill="${accent}" opacity="0.88"/>`;
+    case 'mountain':
+      return `<path d="M24 58 39 34l10 15 7-10 16 19H24Z" fill="${accent}" opacity="0.84"/><path d="M29 62h38" stroke="${accent}" stroke-width="4" stroke-linecap="round"/>`;
+    case 'coin':
+      return `<circle cx="48" cy="41" r="15" fill="${accent}" opacity="0.88"/><path d="M41 41h14M48 34v14" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/><path d="M33 59h30" stroke="${accent}" stroke-width="4" stroke-linecap="round"/>`;
+    case 'path':
+      return `<path d="M31 61c14-15 20-15 34-30" stroke="${accent}" stroke-width="5" stroke-linecap="round" stroke-dasharray="1 10"/><circle cx="31" cy="61" r="6" fill="${accent}"/><circle cx="65" cy="31" r="6" fill="${accent}"/>`;
+    case 'shield':
+      return `<path d="M48 22 66 29v14c0 12-8.5 20-18 24-9.5-4-18-12-18-24V29l18-7Z" fill="${accent}" opacity="0.88"/><path d="m41 44 5 5 10-11" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`;
+    case 'bubble':
+      return `<path d="M28 30c0-6.6 5.4-12 12-12h16c6.6 0 12 5.4 12 12v11c0 6.6-5.4 12-12 12H45l-11 9v-9h-2c-2.2 0-4-1.8-4-4V30Z" fill="${accent}" opacity="0.88"/>`;
+    case 'phone':
+      return `<path d="M39 28h18a5 5 0 0 1 5 5v30a5 5 0 0 1-5 5H39a5 5 0 0 1-5-5V33a5 5 0 0 1 5-5Z" fill="${accent}" opacity="0.88"/><circle cx="48" cy="60" r="2.5" fill="#fff"/><path d="M42 35h12" stroke="#fff" stroke-width="3" stroke-linecap="round"/>`;
+    case 'compass':
+      return `<circle cx="48" cy="43" r="16" fill="none" stroke="${accent}" stroke-width="4"/><path d="m55 36-4 12-12 4 4-12 12-4Z" fill="${accent}" opacity="0.9"/>`;
+    case 'guide':
+      return `<circle cx="48" cy="31" r="8" fill="${accent}" opacity="0.9"/><path d="M36 58c2-8 6-13 12-13s10 5 12 13" stroke="${accent}" stroke-width="5" stroke-linecap="round"/><path d="M28 44h14M54 44h14" stroke="${accent}" stroke-width="4" stroke-linecap="round"/>`;
+    case 'ribbon':
+      return `<path d="M48 24c9 0 16 7 16 16s-7 16-16 16-16-7-16-16 7-16 16-16Z" fill="${accent}" opacity="0.88"/><path d="m40 51-5 17 13-8 13 8-5-17" fill="${accent}" opacity="0.72"/>`;
+    case 'star':
+      return `<path d="m48 24 6.4 13 14.3 2.1-10.4 10.1 2.5 14.3L48 57l-12.8 6.7 2.5-14.3L27.3 39l14.3-2.1L48 24Z" fill="${accent}" opacity="0.88"/>`;
+    case 'lamp':
+      return `<path d="M48 24c-8.8 0-16 7-16 15.7 0 5.4 2.8 9.2 6.4 12H58c3.6-2.8 6.4-6.6 6.4-12C64.4 31 56.8 24 48 24Z" fill="${accent}" opacity="0.88"/><path d="M41 57h14M43 63h10" stroke="${accent}" stroke-width="4" stroke-linecap="round"/>`;
+    default:
+      return `<circle cx="48" cy="40" r="16" fill="${accent}" opacity="0.88"/>`;
+  }
+}
+
+function renderRobots() {
+  return `User-agent: *\nAllow: /\nSitemap: ${pageUrl('/sitemap.xml')}\n`;
+}
+
+function renderNotFound() {
+  const title = `页面不存在_${site.siteName}`;
+  const description = '访问的页面不存在，请返回首页或查看新闻资讯。';
+  return renderLayout({
+    title,
+    description,
+    route: '/',
+    keywords: buildKeywords('/', ['404']),
+    schemas: baseSchemas('/', title, description, []),
+    body: `
+      <section class="page-hero">
+        <div class="container">
+          <div class="section-shell">
+            <div class="eyebrow">404</div>
+            <h1>页面不存在</h1>
+            <p class="lead">你访问的页面可能已调整。可以先回到首页，或查看新闻资讯与核心栏目。</p>
+            <div class="hero-actions">
+              <a class="btn btn-primary" href="./index.html">返回首页</a>
+              <a class="btn btn-secondary" href="./news/">查看新闻资讯</a>
+            </div>
+          </div>
+        </div>
+      </section>`
+  });
+}

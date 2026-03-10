@@ -1,0 +1,9 @@
+﻿{
+  "name": "rdsgm-static-site",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Static SEO-focused site generator for RDSGM",
+  "scripts": {
+    "build": "node scripts/build.js"
+  }
+}
