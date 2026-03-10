@@ -16,11 +16,11 @@ const sectionIconMap = {
   contact: 'section-contact'
 };
 const quickHighlights = [
-  { icon: 'quick-visit', title: '实地考察免费', text: '到园看墓前可先电话预约，现场沟通更直接。' },
-  { icon: 'quick-guide', title: '全程陪同讲解', text: '围绕园区、分区、墓型和路线安排逐项说明。' },
-  { icon: 'quick-offer', title: '预算比较清楚', text: '帮助家属先建立墓型价格和预算区间认知。' },
-  { icon: 'quick-service', title: '一对一咨询', text: '看墓、办理和安葬问题统一对接，不必反复转述。' },
-  { icon: 'quick-answer', title: '常见问题答疑', text: '围绕材料准备、碑文确认和安葬时间集中整理。' }
+  { icon: 'quick-visit', title: '预约看墓', text: '先约时间再到园，看墓路线和接待安排更清楚。' },
+  { icon: 'quick-guide', title: '现场讲解', text: '到园后可直接对着分区和墓型逐项比较。' },
+  { icon: 'quick-offer', title: '预算参考', text: '先了解价格区间，再决定重点看哪些位置。' },
+  { icon: 'quick-service', title: '一对一沟通', text: '从看墓到办理都能按家里实际情况来问。' },
+  { icon: 'quick-answer', title: '常见问题', text: '材料、碑文、安葬时间这些问题可以先问清。' }
 ];
 
 const site = readJson(path.join(src, 'data', 'site.json'));
@@ -246,16 +246,16 @@ function renderHome() {
       <div class="news-meta"><span class="badge">${escapeHtml(item.category)}</span><time datetime="${escapeHtml(item.date)}">${escapeHtml(item.date)}</time></div>
       <h3><a href="${relative('/', `/news/${item.slug}/`)}">${escapeHtml(item.title)}</a></h3>
       <p>${escapeHtml(item.summary)}</p>
-      <a class="read-more" href="${relative('/', `/news/${item.slug}/`)}">阅读全文</a>
+      <a class="read-more" href="${relative('/', `/news/${item.slug}/`)}">继续看</a>
     </article>`).join('');
 
   const cards = sectionCards.map(section => `
     <article class="card">
       <img class="card-icon" src="${relative('/', `/assets/${sectionIconMap[section.slug] || 'section-service'}.svg`)}" alt="${escapeHtml(section.title)}图标" width="72" height="72">
-      <span class="badge">栏目</span>
+      <span class="badge">查看</span>
       <h3>${escapeHtml(section.title)}</h3>
       <p>${escapeHtml(section.description)}</p>
-      <a class="card-link" href="${relative('/', `/${section.slug}/`)}">查看栏目</a>
+      <a class="card-link" href="${relative('/', `/${section.slug}/`)}">进入页面</a>
     </article>`).join('');
   const quickCards = quickHighlights.map(item => `
     <article class="quick-card">
@@ -276,19 +276,19 @@ function renderHome() {
           <div class="hero-copy">
             <div class="eyebrow">成都 · 龙泉驿区</div>
             <h1>燃灯寺公墓预约服务中心</h1>
-            <p class="lead">燃灯寺公墓位于成都龙泉驿区，面向本地及周边家庭提供预约看墓、路线咨询、墓型介绍、安葬流程说明和后续服务指引，方便用户快速了解园区信息与咨询方式。</p>
+            <p class="lead">燃灯寺公墓位于成都龙泉驿区，页面里整理了预约看墓、路线咨询、墓型介绍、安葬流程和后续服务说明，方便到园前先把主要情况看清楚。</p>
             <div class="hero-actions">
               <a class="btn btn-primary" href="${escapeHtml(phoneHref(site.phone))}">电话咨询 ${escapeHtml(site.phone)}</a>
               <a class="btn btn-secondary" href="${relative('/', '/news/')}">查看新闻资讯</a>
             </div>
           </div>
           <aside class="hero-panel">
-            <h2>燃灯寺公墓服务概览</h2>
+            <h2>来电前常问的几件事</h2>
             <ul class="meta-list">
-              <li>提供预约看墓、路线咨询、墓型介绍与一对一沟通服务。</li>
-              <li>围绕园区介绍、景观展示、价格咨询、流程说明等内容做清晰分类。</li>
-              <li>保留联系电话与联系地址，方便用户快速咨询和到访了解。</li>
-              <li>持续发布新闻资讯与问答内容，帮助用户了解园区动态和常见问题。</li>
+              <li>现在能看哪些墓型，预算大概从多少开始。</li>
+              <li>第一次过去怎么走，到园前要不要先预约时间。</li>
+              <li>双墓、壁葬和常规墓型大概怎么比较会更直接。</li>
+              <li>选好位置以后，后面的安葬和碑文怎么继续安排。</li>
             </ul>
           </aside>
         </div>
@@ -296,8 +296,8 @@ function renderHome() {
       <section class="section">
         <div class="container section-head">
           <div>
-            <h2>服务亮点</h2>
-            <p>参考原站的图标化表达方式，把核心服务能力改成更直观的可视化入口。</p>
+            <h2>先看这些</h2>
+            <p>第一次了解燃灯寺公墓时，通常都会先从这几部分开始看。</p>
           </div>
         </div>
         <div class="container quick-grid">${quickCards}</div>
@@ -305,8 +305,8 @@ function renderHome() {
       <section class="section">
         <div class="container section-head">
           <div>
-            <h2>核心栏目</h2>
-            <p>围绕园区介绍、景观展示、价格咨询、流程说明和问答资讯等内容进行清晰整理。</p>
+            <h2>按需求查看</h2>
+            <p>想先看环境、价格、流程还是预约电话，可以直接从下面进入。</p>
           </div>
         </div>
         <div class="container grid-3">${cards}</div>
@@ -314,10 +314,10 @@ function renderHome() {
       <section class="section">
         <div class="container section-head">
           <div>
-            <h2>最新新闻</h2>
-            <p>持续整理园区动态、安葬指南、选墓建议和常见问答，方便用户了解最新内容。</p>
+            <h2>近期咨询内容</h2>
+            <p>下面这些内容，基本都是最近问得比较多的几个方向。</p>
           </div>
-          <a class="btn btn-secondary" href="${relative('/', '/news/')}">查看全部新闻</a>
+          <a class="btn btn-secondary" href="${relative('/', '/news/')}">查看全部内容</a>
         </div>
         <div class="container news-list">${latest}</div>
       </section>`
@@ -337,9 +337,9 @@ function renderSection(section) {
     : '';
   const faqBlock = section.slug === 'faq'
     ? `<div class="faq-list">${[
-      ['死亡证明怎么办理？', '建议先确认医院、社区或公安系统出具证明的流程，再与殡仪及安葬安排衔接。'],
-      ['预约看墓要准备什么？', '可以先明确预算、看墓时间和想了解的墓型，再电话预约提高效率。'],
-      ['碑文刻字什么时候沟通？', '建议在选定墓型并确认安葬时间后尽早沟通，避免影响后续安排。']
+      ['第一次去燃灯寺公墓看墓，需要提前预约吗？', '最好提前打电话约时间，尤其是周末、节前或一家人一起过去时，先确认接待和路线会省事很多。'],
+      ['预算不高的话，先看哪些墓型比较合适？', '如果只是先做预算比较，可以先从双墓起价、壁葬和几个常规价位墓型开始看，到园后再结合位置继续筛选。'],
+      ['选好墓位后，碑文和安葬时间什么时候确定？', '一般是在墓位基本定下来之后，再根据家里安排确认碑文内容和安葬时间，这样前后衔接更顺。']
     ].map(([q, a]) => `<article class="faq-item"><h3>${escapeHtml(q)}</h3><p>${escapeHtml(a)}</p></article>`).join('')}</div>`
     : '';
 
@@ -386,7 +386,7 @@ function renderNewsIndex() {
         <div class="news-meta"><span class="badge">${escapeHtml(item.category)}</span><time datetime="${escapeHtml(item.date)}">${escapeHtml(item.date)}</time></div>
         <h3><a href="${relative(route, `/news/${item.slug}/`)}">${escapeHtml(item.title)}</a></h3>
         <p>${escapeHtml(item.summary)}</p>
-        <a class="read-more" href="${relative(route, `/news/${item.slug}/`)}">阅读全文</a>
+        <a class="read-more" href="${relative(route, `/news/${item.slug}/`)}">继续看</a>
       </article>`).join('');
     const prevHref = page > 1 ? (page === 2 ? '/news/' : `/news/page/${page - 1}/`) : '';
     const nextHref = page < totalPages ? `/news/page/${page + 1}/` : '';
@@ -406,7 +406,7 @@ function renderNewsIndex() {
             <div class="section-shell">
               <div class="eyebrow">燃灯寺资讯</div>
               <h1>新闻资讯${page > 1 ? ` · 第 ${page} 页` : ''}</h1>
-              <p class="lead">持续整理园区动态、安葬指南、选墓建议和常见问答，方便用户按时间顺序浏览了解。</p>
+              <p class="lead">这里收的是问得比较多的内容，包括价格、流程、安葬安排和到园前要注意的事。</p>
             </div>
           </div>
         </section>
