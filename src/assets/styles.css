@@ -101,6 +101,37 @@ code {
 .article-shell, .section-shell { padding: 30px; }
 .article-content p, .section-content p { margin: 0 0 16px; color: #41372f; }
 .article-content h2, .section-content h2 { margin: 24px 0 12px; }
+.scenery-hero {
+  margin: 0 0 22px;
+  overflow: hidden;
+  border-radius: 22px;
+  border: 1px solid rgba(138, 46, 29, 0.08);
+}
+.scenery-hero img { width: 100%; height: auto; display: block; }
+.scenery-gallery {
+  margin-top: 22px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+}
+.scenery-card {
+  margin: 0;
+  overflow: hidden;
+  border-radius: 20px;
+  background: var(--paper);
+  border: 1px solid rgba(138, 46, 29, 0.08);
+  box-shadow: var(--shadow);
+}
+.scenery-card img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+.scenery-card figcaption {
+  padding: 12px 14px;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
 .pricing-shell {
   margin-top: 18px;
   border: 1px solid var(--line);
@@ -150,6 +181,7 @@ code {
   .hero-copy, .hero-panel, .article-shell, .section-shell { padding: 22px; }
   .section-head { flex-direction: column; align-items: flex-start; }
   .quick-grid { grid-template-columns: 1fr; }
+  .scenery-gallery { grid-template-columns: 1fr; }
   .news-card h3 { font-size: 1.18rem; }
   .pricing-list { grid-template-columns: 1fr; }
   .pricing-item:nth-child(odd) { border-right: 0; }
@@ -188,6 +220,10 @@ code {
   .section { padding: 20px 0 10px; }
   .section-head h2 { font-size: 1.45rem; }
   .article-content p, .section-content p { margin-bottom: 14px; font-size: 0.96rem; }
+  .scenery-hero { margin-bottom: 18px; border-radius: 16px; }
+  .scenery-gallery { gap: 14px; }
+  .scenery-card { border-radius: 16px; }
+  .scenery-card figcaption { padding: 10px 12px; font-size: 0.88rem; }
   .pricing-item { padding: 14px 16px; }
   .pricing-value { font-size: 1.05rem; }
   .pricing-note { padding: 14px 16px; }

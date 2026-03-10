@@ -35,6 +35,17 @@
       "slug": "scenery",
       "title": "陵园景观",
       "description": "通过园区实景查看燃灯寺公墓的环境、分区氛围、道路状况和现场整体感觉。",
+      "heroImage": "/assets/scenery/header2.jpg",
+      "gallery": [
+        { "src": "/assets/scenery/gongmu1.jpg", "alt": "燃灯寺公墓园区实景一" },
+        { "src": "/assets/scenery/gongmu2.jpg", "alt": "燃灯寺公墓园区实景二" },
+        { "src": "/assets/scenery/gongmu3.jpg", "alt": "燃灯寺公墓园区实景三" },
+        { "src": "/assets/scenery/gongmu4.jpg", "alt": "燃灯寺公墓园区实景四" },
+        { "src": "/assets/scenery/gongmu5.jpg", "alt": "燃灯寺公墓园区实景五" },
+        { "src": "/assets/scenery/gongmu6.jpg", "alt": "燃灯寺公墓园区实景六" },
+        { "src": "/assets/scenery/gongmu7.jpg", "alt": "燃灯寺公墓园区实景七" },
+        { "src": "/assets/scenery/gongmu8.jpg", "alt": "燃灯寺公墓园区实景八" }
+      ],
       "content": [
         "正式看墓前，先把园区环境看一遍会更有数，比如现场安不安静、道路平不平整、绿化和卫生状况怎么样，这些都是最直观的部分。",
         "照片和页面只能先看个大概，真正选位时，更关键的还是每个区域的距离、朝向、采光和周边空旷程度。",

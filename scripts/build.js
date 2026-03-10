@@ -26,12 +26,14 @@ const quickHighlights = [
 const site = readJson(path.join(src, 'data', 'site.json'));
 const news = readJson(path.join(src, 'data', 'news.json')).sort((a, b) => new Date(b.date) - new Date(a.date));
 const styles = fs.readFileSync(path.join(src, 'assets', 'styles.css'), 'utf8');
+const sceneryDir = path.join(src, 'assets', 'scenery');
 const lastModified = news.length ? news[0].date : new Date().toISOString().slice(0, 10);
 
 rimraf(dist);
 fs.mkdirSync(dist, { recursive: true });
 writeFile(path.join(dist, 'assets', 'styles.css'), styles);
 writeFile(path.join(dist, 'assets', 'cover-seo.svg'), renderCoverSvg());
+copyStaticDir(sceneryDir, path.join(dist, 'assets', 'scenery'));
 writeGeneratedIcons();
 writeFile(path.join(dist, 'robots.txt'), renderRobots());
 writeFile(path.join(dist, 'feed.xml'), renderFeed());
@@ -66,6 +68,20 @@ function writeFile(file, content) {
 function writePage(route, html) {
   const out = route === '/' ? path.join(dist, 'index.html') : path.join(dist, route, 'index.html');
   writeFile(out, html);
+}
+
+function copyStaticDir(from, to) {
+  if (!fs.existsSync(from)) return;
+  fs.mkdirSync(to, { recursive: true });
+  for (const entry of fs.readdirSync(from, { withFileTypes: true })) {
+    const fromFile = path.join(from, entry.name);
+    const toFile = path.join(to, entry.name);
+    if (entry.isDirectory()) {
+      copyStaticDir(fromFile, toFile);
+    } else {
+      fs.copyFileSync(fromFile, toFile);
+    }
+  }
 }
 
 function trimSlash(value) {
@@ -327,6 +343,12 @@ function renderHome() {
 function renderSection(section) {
   const route = `/${section.slug}/`;
   const breadcrumbs = [{ label: '首页', href: '/' }, { label: section.title, href: route }];
+  const sceneryHero = section.slug === 'scenery' && section.heroImage
+    ? `<figure class="scenery-hero"><img src="${relative(route, section.heroImage)}" alt="${escapeHtml(section.title)}横幅图" loading="eager"></figure>`
+    : '';
+  const sceneryGallery = section.slug === 'scenery' && Array.isArray(section.gallery)
+    ? `<div class="scenery-gallery">${section.gallery.map(item => `<figure class="scenery-card"><img src="${relative(route, item.src)}" alt="${escapeHtml(item.alt || section.title)}" loading="lazy"><figcaption>${escapeHtml(item.alt || section.title)}</figcaption></figure>`).join('')}</div>`
+    : '';
   const pricingBlock = section.slug === 'pricing' && Array.isArray(section.priceItems)
     ? `<div class="pricing-shell">
         <div class="pricing-list">
@@ -363,7 +385,9 @@ function renderSection(section) {
       <section class="page-body">
         <div class="container">
           <article class="section-shell section-content">
+            ${sceneryHero}
             ${section.content.map(paragraph => `<p>${linkifyPhoneText(paragraph)}</p>`).join('')}
+            ${sceneryGallery}
             ${pricingBlock}
             ${faqBlock}
             <div class="cta">预约看墓与咨询请直接联系<strong>${renderPhoneLink({ label: site.phone })}</strong></div>
