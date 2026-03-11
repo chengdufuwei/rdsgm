@@ -16,11 +16,11 @@ const sectionIconMap = {
   contact: 'section-contact'
 };
 const quickHighlights = [
-  { icon: 'quick-visit', title: '预约看墓', text: '先约时间再到园，看墓路线和接待安排更清楚。' },
-  { icon: 'quick-guide', title: '现场讲解', text: '到园后可直接对着分区和墓型逐项比较。' },
-  { icon: 'quick-offer', title: '预算参考', text: '先了解价格区间，再决定重点看哪些位置。' },
-  { icon: 'quick-service', title: '一对一沟通', text: '从看墓到办理都能按家里实际情况来问。' },
-  { icon: 'quick-answer', title: '常见问题', text: '材料、碑文、安葬时间这些问题可以先问清。' }
+  { icon: 'quick-visit', title: '预约看墓', text: '实地考察全程免费。' },
+  { icon: 'quick-guide', title: '现场选购', text: '选购墓型全程陪同。' },
+  { icon: 'quick-offer', title: '惠民便民', text: '惠民便民，折上有礼。' },
+  { icon: 'quick-service', title: '一对一服务', text: '一对一精准服务。' },
+  { icon: 'quick-answer', title: '专业答疑', text: '殡葬疑虑专业答疑。' }
 ];
 
 const site = readJson(path.join(src, 'data', 'site.json'));
@@ -292,19 +292,19 @@ function renderHome() {
           <div class="hero-copy">
             <div class="eyebrow">成都 · 龙泉驿区</div>
             <h1>燃灯寺公墓预约服务中心</h1>
-            <p class="lead">燃灯寺公墓位于成都龙泉驿区，页面里整理了预约看墓、路线咨询、墓型介绍、安葬流程和后续服务说明，方便到园前先把主要情况看清楚。</p>
+            <p class="lead">成都燃灯寺公墓预约咨询热线：138-0801-1743。提供免费专车接送看墓服务，地址位于成都市龙泉驿区同安街道。</p>
             <div class="hero-actions">
               <a class="btn btn-primary" href="${escapeHtml(phoneHref(site.phone))}">电话咨询 ${escapeHtml(site.phone)}</a>
-              <a class="btn btn-secondary" href="${relative('/', '/news/')}">查看新闻资讯</a>
+              <a class="btn btn-secondary" href="${relative('/', '/news/')}">查看新闻公告</a>
             </div>
           </div>
           <aside class="hero-panel">
-            <h2>来电前常问的几件事</h2>
+            <h2>公告</h2>
             <ul class="meta-list">
-              <li>现在能看哪些墓型，预算大概从多少开始。</li>
-              <li>第一次过去怎么走，到园前要不要先预约时间。</li>
-              <li>双墓、壁葬和常规墓型大概怎么比较会更直接。</li>
-              <li>选好位置以后，后面的安葬和碑文怎么继续安排。</li>
+              <li>购墓实行实名登记，禁止炒买炒卖。</li>
+              <li>入园看墓请提前一天预约，可免费安排专车接送。</li>
+              <li>双墓低至 22000 元起，更多墓型和优惠请来电咨询。</li>
+              <li>预约电话：${escapeHtml(site.phone)}。</li>
             </ul>
           </aside>
         </div>
@@ -312,8 +312,8 @@ function renderHome() {
       <section class="section">
         <div class="container section-head">
           <div>
-            <h2>先看这些</h2>
-            <p>第一次了解燃灯寺公墓时，通常都会先从这几部分开始看。</p>
+            <h2>服务项目</h2>
+            <p>原站首页展示的主要服务项目。</p>
           </div>
         </div>
         <div class="container quick-grid">${quickCards}</div>
@@ -321,8 +321,8 @@ function renderHome() {
       <section class="section">
         <div class="container section-head">
           <div>
-            <h2>按需求查看</h2>
-            <p>想先看环境、价格、流程还是预约电话，可以直接从下面进入。</p>
+            <h2>栏目导航</h2>
+            <p>园区环境、墓型价格、服务流程、客户服务、问答和联系方式可直接查看。</p>
           </div>
         </div>
         <div class="container grid-3">${cards}</div>
@@ -330,10 +330,10 @@ function renderHome() {
       <section class="section">
         <div class="container section-head">
           <div>
-            <h2>近期咨询内容</h2>
-            <p>下面这些内容，基本都是最近问得比较多的几个方向。</p>
+            <h2>新闻公告</h2>
+            <p>原站资讯列表中的部分内容。</p>
           </div>
-          <a class="btn btn-secondary" href="${relative('/', '/news/')}">查看全部内容</a>
+          <a class="btn btn-secondary" href="${relative('/', '/news/')}">查看全部资讯</a>
         </div>
         <div class="container news-list">${latest}</div>
       </section>`
@@ -357,12 +357,8 @@ function renderSection(section) {
         ${Array.isArray(section.priceNotice) ? `<div class="pricing-note">${section.priceNotice.map(line => `<p>${linkifyPhoneText(line)}</p>`).join('')}</div>` : ''}
       </div>`
     : '';
-  const faqBlock = section.slug === 'faq'
-    ? `<div class="faq-list">${[
-      ['第一次去燃灯寺公墓看墓，需要提前预约吗？', '最好提前打电话约时间，尤其是周末、节前或一家人一起过去时，先确认接待和路线会省事很多。'],
-      ['预算不高的话，先看哪些墓型比较合适？', '如果只是先做预算比较，可以先从双墓起价、壁葬和几个常规价位墓型开始看，到园后再结合位置继续筛选。'],
-      ['选好墓位后，碑文和安葬时间什么时候确定？', '一般是在墓位基本定下来之后，再根据家里安排确认碑文内容和安葬时间，这样前后衔接更顺。']
-    ].map(([q, a]) => `<article class="faq-item"><h3>${escapeHtml(q)}</h3><p>${escapeHtml(a)}</p></article>`).join('')}</div>`
+  const faqBlock = section.slug === 'faq' && Array.isArray(section.faqQuestions)
+    ? `<div class="faq-list">${section.faqQuestions.map(question => `<article class="faq-item"><h3>${escapeHtml(question)}</h3></article>`).join('')}</div>`
     : '';
 
   return renderLayout({
@@ -402,7 +398,7 @@ function renderNewsIndex() {
   for (let page = 1; page <= totalPages; page++) {
     const route = page === 1 ? '/news/' : `/news/page/${page}/`;
     const title = page === 1 ? `新闻资讯_${site.siteName}` : `新闻资讯第 ${page} 页_${site.siteName}`;
-    const description = page === 1 ? '汇总燃灯寺公墓相关资讯、安葬指南、选墓建议和常见问答内容。' : `新闻资讯第 ${page} 页，继续浏览燃灯寺公墓相关内容。`;
+    const description = page === 1 ? '汇总燃灯寺公墓相关资讯、新闻公告、价格参考和常见殡葬内容。' : `新闻资讯第 ${page} 页，继续浏览燃灯寺公墓相关资讯。`;
     const chunk = news.slice((page - 1) * perPage, page * perPage);
     const breadcrumbs = [{ label: '首页', href: '/' }, { label: '新闻资讯', href: '/news/' }];
     const cards = chunk.map(item => `
@@ -430,7 +426,7 @@ function renderNewsIndex() {
             <div class="section-shell">
               <div class="eyebrow">燃灯寺资讯</div>
               <h1>新闻资讯${page > 1 ? ` · 第 ${page} 页` : ''}</h1>
-              <p class="lead">这里收的是问得比较多的内容，包括价格、流程、安葬安排和到园前要注意的事。</p>
+              <p class="lead">这里汇总原站新闻列表中的资讯、价格、安葬和殡葬常识内容。</p>
             </div>
           </div>
         </section>
