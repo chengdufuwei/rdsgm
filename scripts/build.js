@@ -268,13 +268,11 @@ function renderHome() {
     </article>`).join('');
 
   const cards = sectionCards.map(section => `
-    <article class="card">
+    <a class="card card-link-block" href="${relative('/', `/${section.slug}/`)}">
       <img class="card-icon" src="${relative('/', `/assets/${sectionIconMap[section.slug] || 'section-service'}.svg`)}" alt="${escapeHtml(section.title)}图标" width="72" height="72">
-      <span class="badge">查看</span>
       <h3>${escapeHtml(section.title)}</h3>
       <p>${escapeHtml(section.description)}</p>
-      <a class="card-link" href="${relative('/', `/${section.slug}/`)}">进入页面</a>
-    </article>`).join('');
+    </a>`).join('');
   const quickCards = quickHighlights.map(item => `
     <article class="quick-card">
       <img class="quick-icon" src="${relative('/', `/assets/${item.icon}.svg`)}" alt="${escapeHtml(item.title)}图标" width="56" height="56">
