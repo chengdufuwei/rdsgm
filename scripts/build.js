@@ -201,6 +201,7 @@ function renderLayout({ title, description, route, body, breadcrumbs = [], keywo
     ? `<div class="container breadcrumb">${breadcrumbs.map((crumb, idx) => idx === breadcrumbs.length - 1 ? `<span>${crumb.label}</span>` : `<a href="${relative(route, crumb.href)}">${crumb.label}</a>`).join(' / ')}</div>`
     : '';
   const schemaBlocks = schemas.map(schema => `<script type="application/ld+json">${serializeJsonLd(schema)}</script>`).join('\n  ');
+  const mobilePhoneBar = `<div class="mobile-callbar"><a class="mobile-callbar-link" href="${escapeHtml(phoneHref(site.phone))}">电话咨询 ${escapeHtml(site.phone)}</a></div>`;
   return `<!doctype html>
 <html lang="zh-CN">
 <head>
@@ -252,6 +253,7 @@ function renderLayout({ title, description, route, body, breadcrumbs = [], keywo
       </div>
     </div>
   </footer>
+  ${mobilePhoneBar}
 </body>
 </html>`;
 }
@@ -313,7 +315,7 @@ function renderHome() {
         <div class="container section-head">
           <div>
             <h2>服务项目</h2>
-            <p>原站首页展示的主要服务项目。</p>
+            <p>围绕看墓、选墓、安葬咨询整理的主要服务项目。</p>
           </div>
         </div>
         <div class="container quick-grid">${quickCards}</div>
@@ -331,7 +333,7 @@ function renderHome() {
         <div class="container section-head">
           <div>
             <h2>新闻公告</h2>
-            <p>原站资讯列表中的部分内容。</p>
+            <p>提供购墓、安葬、价格和殡葬常识等相关资讯。</p>
           </div>
           <a class="btn btn-secondary" href="${relative('/', '/news/')}">查看全部资讯</a>
         </div>
@@ -426,7 +428,7 @@ function renderNewsIndex() {
             <div class="section-shell">
               <div class="eyebrow">燃灯寺资讯</div>
               <h1>新闻资讯${page > 1 ? ` · 第 ${page} 页` : ''}</h1>
-              <p class="lead">这里汇总原站新闻列表中的资讯、价格、安葬和殡葬常识内容。</p>
+              <p class="lead">这里汇总购墓、价格、安葬安排和殡葬常识等内容。</p>
             </div>
           </div>
         </section>
@@ -484,7 +486,7 @@ function renderNewsDetails() {
       <section class="page-body">
         <div class="container">
           <article class="article-shell article-content">
-            ${item.content.map(paragraph => `<p>${escapeHtml(paragraph)}</p>`).join('')}
+            ${item.content.map(paragraph => `<p>${linkifyPhoneText(paragraph)}</p>`).join('')}
             <div class="cta">预约与咨询电话<strong>${renderPhoneLink({ label: site.phone })}</strong></div>
           </article>
           <div class="section" style="padding-top:16px;">

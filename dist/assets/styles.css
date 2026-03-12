@@ -167,6 +167,7 @@ code {
 .footer-panel { border-top: 1px solid var(--line); padding-top: 20px; display: flex; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
 .badge { display: inline-flex; padding: 6px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--brand-deep); font-size: 0.85rem; font-weight: 700; }
 .phone-link { color: inherit; word-break: break-all; }
+.mobile-callbar { display: none; }
 @media (max-width: 920px) {
   .hero-grid, .grid-3 { grid-template-columns: 1fr; }
   .quick-grid { grid-template-columns: repeat(2, 1fr); }
@@ -190,6 +191,7 @@ code {
   .footer-panel { flex-direction: column; }
 }
 @media (max-width: 640px) {
+  body { padding-bottom: 84px; }
   .site-header { position: static; }
   .header-row { gap: 14px; padding: 12px 0; }
   .brand { width: 100%; }
@@ -229,6 +231,31 @@ code {
   .pricing-note { padding: 14px 16px; }
   .news-meta { gap: 8px; font-size: 0.86rem; }
   .pagination a, .pagination span { min-width: 40px; height: 40px; }
+  .mobile-callbar {
+    display: block;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    padding: 12px 14px calc(12px + env(safe-area-inset-bottom));
+    background: rgba(255, 253, 249, 0.96);
+    border-top: 1px solid rgba(138, 46, 29, 0.12);
+    backdrop-filter: blur(12px);
+  }
+  .mobile-callbar-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 52px;
+    width: 100%;
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--brand), #a83f28);
+    color: #fff;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    box-shadow: 0 12px 28px rgba(100, 32, 20, 0.24);
+  }
 }
 @media (max-width: 420px) {
   .container { width: min(var(--content), calc(100% - 20px)); }
