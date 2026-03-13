@@ -195,7 +195,20 @@ function baseSchemas(route, title, description, breadcrumbs) {
   return schemas;
 }
 
-function renderLayout({ title, description, route, body, breadcrumbs = [], keywords = '', type = 'website', extraHead = '', schemas = [] }) {
+function renderLayout({
+  title,
+  description,
+  route,
+  body,
+  breadcrumbs = [],
+  keywords = '',
+  type = 'website',
+  extraHead = '',
+  schemas = [],
+  canonicalUrl = pageUrl(route),
+  ogUrl = pageUrl(route),
+  robots = 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1'
+}) {
   const nav = site.navigation.map(item => `<a href="${relative(route, item.href)}"${item.href === route ? ' class="active"' : ''}>${item.label}</a>`).join('');
   const crumbHtml = breadcrumbs.length
     ? `<div class="container breadcrumb">${breadcrumbs.map((crumb, idx) => idx === breadcrumbs.length - 1 ? `<span>${crumb.label}</span>` : `<a href="${relative(route, crumb.href)}">${crumb.label}</a>`).join(' / ')}</div>`
@@ -210,16 +223,16 @@ function renderLayout({ title, description, route, body, breadcrumbs = [], keywo
   <title>${escapeHtml(title)}</title>
   <meta name="description" content="${escapeHtml(description)}">
   <meta name="keywords" content="${escapeHtml(keywords)}">
-  <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
+  <meta name="robots" content="${escapeHtml(robots)}">
   <meta name="author" content="${escapeHtml(site.siteName)}">
-  <link rel="canonical" href="${pageUrl(route)}">
+  <link rel="canonical" href="${escapeHtml(canonicalUrl)}">
   <link rel="alternate" type="application/rss+xml" title="${escapeHtml(site.siteName)} 新闻资讯" href="${pageUrl('/feed.xml')}">
   <meta property="og:locale" content="zh_CN">
   <meta property="og:type" content="${type}">
   <meta property="og:site_name" content="${escapeHtml(site.siteName)}">
   <meta property="og:title" content="${escapeHtml(title)}">
   <meta property="og:description" content="${escapeHtml(description)}">
-  <meta property="og:url" content="${pageUrl(route)}">
+  <meta property="og:url" content="${escapeHtml(ogUrl)}">
   <meta property="og:image" content="${pageUrl(defaultImage)}">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${escapeHtml(title)}">
@@ -513,7 +526,7 @@ function renderSitemap() {
   const articleDates = new Map(news.map(item => [`/news/${item.slug}/`, item.date]));
   const urls = ['/']
     .concat(site.sections.map(section => `/${section.slug}/`))
-    .concat(['/news/', '/feed.xml'])
+    .concat(['/news/'])
     .concat(news.map(item => `/news/${item.slug}/`))
     .concat(Array.from({ length: Math.max(0, Math.ceil(news.length / perPage) - 1) }, (_, idx) => `/news/page/${idx + 2}/`));
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(url => `  <url><loc>${pageUrl(url)}</loc><lastmod>${normalizeDate(articleDates.get(url) || lastModified)}</lastmod></url>`).join('\n')}\n</urlset>`;
@@ -685,7 +698,10 @@ function renderNotFound() {
     description,
     route: '/',
     keywords: buildKeywords('/', ['404']),
-    schemas: baseSchemas('/', title, description, []),
+    canonicalUrl: pageUrl('/404.html'),
+    ogUrl: pageUrl('/404.html'),
+    robots: 'noindex,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1',
+    schemas: baseSchemas('/404.html', title, description, []),
     body: `
       <section class="page-hero">
         <div class="container">
