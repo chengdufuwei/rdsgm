@@ -225,6 +225,7 @@ function renderLayout({
   <meta name="keywords" content="${escapeHtml(keywords)}">
   <meta name="robots" content="${escapeHtml(robots)}">
   <meta name="author" content="${escapeHtml(site.siteName)}">
+  <meta name="msvalidate.01" content="EF97D2F4FBAE4900F130603B1041945A">
   <link rel="canonical" href="${escapeHtml(canonicalUrl)}">
   <link rel="alternate" type="application/rss+xml" title="${escapeHtml(site.siteName)} 新闻资讯" href="${pageUrl('/feed.xml')}">
   <meta property="og:locale" content="zh_CN">
