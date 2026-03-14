@@ -291,7 +291,7 @@ function renderHome() {
           <div class="hero-copy">
             <div class="eyebrow">成都 · 龙泉驿区</div>
             <h1>燃灯寺公墓预约服务中心</h1>
-            <p class="lead">成都燃灯寺公墓预约咨询热线：138-0801-1743。提供免费专车接送看墓服务，地址位于成都市龙泉驿区同安街道。</p>
+            <p class="lead">成都燃灯寺公墓预约咨询热线：138-0801-1743。提供免费专车接送看墓服务，地址位于成都市龙泉驿区同安街道同兴村10组。</p>
             <div class="hero-actions">
               <a class="btn btn-primary" href="${escapeHtml(phoneHref(site.phone))}">电话咨询 ${escapeHtml(site.phone)}</a>
               <a class="btn btn-secondary" href="${relative('/', '/contact/')}">预约咨询</a>
@@ -300,9 +300,7 @@ function renderHome() {
           <aside class="hero-panel">
             <h2>公告</h2>
             <ul class="meta-list">
-              <li>购墓实行实名登记，禁止炒买炒卖。</li>
-              <li>入园看墓请提前一天预约，可免费安排专车接送。</li>
-              <li>双墓低至 22000 元起，更多墓型和优惠请来电咨询。</li>
+              <li>购墓凭死亡证明购买。实行实名登记。</li>
               <li>预约电话：${escapeHtml(site.phone)}。</li>
             </ul>
           </aside>
