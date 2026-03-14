@@ -4,7 +4,6 @@ const path = require('path');
 const root = path.resolve(__dirname, '..');
 const src = path.join(root, 'src');
 const dist = path.join(root, 'dist');
-const perPage = 5;
 const defaultImage = '/assets/cover-seo.svg';
 const sectionIconMap = {
   about: 'section-location',
@@ -12,7 +11,6 @@ const sectionIconMap = {
   pricing: 'section-pricing',
   process: 'section-process',
   service: 'section-service',
-  faq: 'section-faq',
   contact: 'section-contact'
 };
 const quickHighlights = [
@@ -24,10 +22,9 @@ const quickHighlights = [
 ];
 
 const site = readJson(path.join(src, 'data', 'site.json'));
-const news = readJson(path.join(src, 'data', 'news.json')).sort((a, b) => new Date(b.date) - new Date(a.date));
 const styles = fs.readFileSync(path.join(src, 'assets', 'styles.css'), 'utf8');
 const sceneryDir = path.join(src, 'assets', 'scenery');
-const lastModified = news.length ? news[0].date : new Date().toISOString().slice(0, 10);
+const lastModified = new Date().toISOString().slice(0, 10);
 
 rimraf(dist);
 fs.mkdirSync(dist, { recursive: true });
@@ -36,15 +33,12 @@ writeFile(path.join(dist, 'assets', 'cover-seo.svg'), renderCoverSvg());
 copyStaticDir(sceneryDir, path.join(dist, 'assets', 'scenery'));
 writeGeneratedIcons();
 writeFile(path.join(dist, 'robots.txt'), renderRobots());
-writeFile(path.join(dist, 'feed.xml'), renderFeed());
 writeFile(path.join(dist, '404.html'), renderNotFound());
 
 const sectionCards = site.sections.filter(section => section.slug !== 'contact');
 
 writePage('/', renderHome());
 for (const section of site.sections) writePage(`/${section.slug}/`, renderSection(section));
-renderNewsIndex();
-renderNewsDetails();
 writeFile(path.join(dist, 'sitemap.xml'), renderSitemap());
 
 function readJson(file) {
@@ -142,7 +136,7 @@ function relative(fromRoute, toRoute) {
 
 function buildKeywords(route, extra = []) {
   const base = [site.siteName, `${site.city}公墓`, '燃灯寺公墓', '公墓预约', '陵园资讯'];
-  const dynamic = route.startsWith('/news/') ? news.map(item => item.category) : site.sections.map(section => section.title);
+  const dynamic = site.sections.map(section => section.title);
   return Array.from(new Set(base.concat(dynamic, extra).filter(Boolean))).join(',');
 }
 
@@ -227,7 +221,6 @@ function renderLayout({
   <meta name="author" content="${escapeHtml(site.siteName)}">
   <meta name="msvalidate.01" content="EF97D2F4FBAE4900F130603B1041945A">
   <link rel="canonical" href="${escapeHtml(canonicalUrl)}">
-  <link rel="alternate" type="application/rss+xml" title="${escapeHtml(site.siteName)} 新闻资讯" href="${pageUrl('/feed.xml')}">
   <meta property="og:locale" content="zh_CN">
   <meta property="og:type" content="${type}">
   <meta property="og:site_name" content="${escapeHtml(site.siteName)}">
@@ -273,14 +266,6 @@ function renderLayout({
 }
 
 function renderHome() {
-  const latest = news.slice(0, 3).map(item => `
-    <article class="news-card">
-      <div class="news-meta"><span class="badge">${escapeHtml(item.category)}</span><time datetime="${escapeHtml(item.date)}">${escapeHtml(item.date)}</time></div>
-      <h3><a href="${relative('/', `/news/${item.slug}/`)}">${escapeHtml(item.title)}</a></h3>
-      <p>${escapeHtml(item.summary)}</p>
-      <a class="read-more" href="${relative('/', `/news/${item.slug}/`)}">继续看</a>
-    </article>`).join('');
-
   const cards = sectionCards.map(section => `
     <a class="card card-link-block" href="${relative('/', `/${section.slug}/`)}">
       <img class="card-icon" src="${relative('/', `/assets/${sectionIconMap[section.slug] || 'section-service'}.svg`)}" alt="${escapeHtml(section.title)}图标" width="72" height="72">
@@ -298,7 +283,7 @@ function renderHome() {
     title: site.seo.title,
     description: site.seo.description,
     route: '/',
-    keywords: buildKeywords('/', ['新闻资讯', '购墓流程', '墓型价格']),
+    keywords: buildKeywords('/', ['购墓流程', '墓型价格']),
     schemas: baseSchemas('/', site.seo.title, site.seo.description, []),
     body: `
       <section class="hero">
@@ -309,7 +294,7 @@ function renderHome() {
             <p class="lead">成都燃灯寺公墓预约咨询热线：138-0801-1743。提供免费专车接送看墓服务，地址位于成都市龙泉驿区同安街道。</p>
             <div class="hero-actions">
               <a class="btn btn-primary" href="${escapeHtml(phoneHref(site.phone))}">电话咨询 ${escapeHtml(site.phone)}</a>
-              <a class="btn btn-secondary" href="${relative('/', '/news/')}">查看新闻公告</a>
+              <a class="btn btn-secondary" href="${relative('/', '/contact/')}">预约咨询</a>
             </div>
           </div>
           <aside class="hero-panel">
@@ -336,20 +321,10 @@ function renderHome() {
         <div class="container section-head">
           <div>
             <h2>栏目导航</h2>
-            <p>园区环境、墓型价格、服务流程、客户服务、问答和联系方式可直接查看。</p>
+            <p>园区环境、墓型价格、服务流程、客户服务和联系方式可直接查看。</p>
           </div>
         </div>
         <div class="container grid-3">${cards}</div>
-      </section>
-      <section class="section">
-        <div class="container section-head">
-          <div>
-            <h2>新闻公告</h2>
-            <p>提供购墓、安葬、价格和殡葬常识等相关资讯。</p>
-          </div>
-          <a class="btn btn-secondary" href="${relative('/', '/news/')}">查看全部资讯</a>
-        </div>
-        <div class="container news-list">${latest}</div>
       </section>`
   });
 }
@@ -371,10 +346,6 @@ function renderSection(section) {
         ${Array.isArray(section.priceNotice) ? `<div class="pricing-note">${section.priceNotice.map(line => `<p>${linkifyPhoneText(line)}</p>`).join('')}</div>` : ''}
       </div>`
     : '';
-  const faqBlock = section.slug === 'faq' && Array.isArray(section.faqQuestions)
-    ? `<div class="faq-list">${section.faqQuestions.map(question => `<article class="faq-item"><h3>${escapeHtml(question)}</h3></article>`).join('')}</div>`
-    : '';
-
   return renderLayout({
     title: `${section.title}_${site.siteName}`,
     description: section.description,
@@ -399,7 +370,6 @@ function renderSection(section) {
             ${section.content.map(paragraph => `<p>${linkifyPhoneText(paragraph)}</p>`).join('')}
             ${sceneryGallery}
             ${pricingBlock}
-            ${faqBlock}
             <div class="cta">预约看墓与咨询请直接联系<strong>${renderPhoneLink({ label: site.phone })}</strong></div>
           </article>
         </div>
@@ -407,151 +377,10 @@ function renderSection(section) {
   });
 }
 
-function renderNewsIndex() {
-  const totalPages = Math.max(1, Math.ceil(news.length / perPage));
-  for (let page = 1; page <= totalPages; page++) {
-    const route = page === 1 ? '/news/' : `/news/page/${page}/`;
-    const title = page === 1 ? `新闻资讯_${site.siteName}` : `新闻资讯第 ${page} 页_${site.siteName}`;
-    const description = page === 1 ? '汇总燃灯寺公墓相关资讯、新闻公告、价格参考和常见殡葬内容。' : `新闻资讯第 ${page} 页，继续浏览燃灯寺公墓相关资讯。`;
-    const chunk = news.slice((page - 1) * perPage, page * perPage);
-    const breadcrumbs = [{ label: '首页', href: '/' }, { label: '新闻资讯', href: '/news/' }];
-    const cards = chunk.map(item => `
-      <article class="news-card">
-        <div class="news-meta"><span class="badge">${escapeHtml(item.category)}</span><time datetime="${escapeHtml(item.date)}">${escapeHtml(item.date)}</time></div>
-        <h3><a href="${relative(route, `/news/${item.slug}/`)}">${escapeHtml(item.title)}</a></h3>
-        <p>${escapeHtml(item.summary)}</p>
-        <a class="read-more" href="${relative(route, `/news/${item.slug}/`)}">继续看</a>
-      </article>`).join('');
-    const prevHref = page > 1 ? (page === 2 ? '/news/' : `/news/page/${page - 1}/`) : '';
-    const nextHref = page < totalPages ? `/news/page/${page + 1}/` : '';
-    const extraHead = `${prevHref ? `<link rel="prev" href="${pageUrl(prevHref)}">` : ''}${nextHref ? `\n  <link rel="next" href="${pageUrl(nextHref)}">` : ''}`;
-
-    writePage(route, renderLayout({
-      title,
-      description,
-      route,
-      breadcrumbs,
-      keywords: buildKeywords(route, ['新闻资讯', `第${page}页`]),
-      extraHead,
-      schemas: baseSchemas(route, title, description, breadcrumbs),
-      body: `
-        <section class="page-hero">
-          <div class="container">
-            <div class="section-shell">
-              <div class="eyebrow">燃灯寺资讯</div>
-              <h1>新闻资讯${page > 1 ? ` · 第 ${page} 页` : ''}</h1>
-              <p class="lead">这里汇总购墓、价格、安葬安排和殡葬常识等内容。</p>
-            </div>
-          </div>
-        </section>
-        <section class="page-body">
-          <div class="container news-list">${cards}${renderPagination(totalPages, page, route)}</div>
-        </section>`
-    }));
-  }
-}
-
-function renderNewsDetails() {
-  news.forEach((item, index) => {
-    const route = `/news/${item.slug}/`;
-    const title = `${item.title}_${site.siteName}`;
-    const breadcrumbs = [{ label: '首页', href: '/' }, { label: '新闻资讯', href: '/news/' }, { label: item.title, href: route }];
-    const articleSchemas = baseSchemas(route, title, item.summary, breadcrumbs);
-    articleSchemas.push({
-      '@context': 'https://schema.org',
-      '@type': 'NewsArticle',
-      headline: item.title,
-      datePublished: normalizeDate(item.date),
-      dateModified: normalizeDate(item.date),
-      author: { '@type': 'Organization', name: site.siteName },
-      publisher: { '@type': 'Organization', name: site.siteName },
-      image: [pageUrl(defaultImage)],
-      mainEntityOfPage: pageUrl(route),
-      description: item.summary,
-      articleSection: item.category,
-      articleBody: item.content.join(' '),
-      inLanguage: 'zh-CN'
-    });
-
-    const prev = news[index + 1];
-    const next = news[index - 1];
-
-    writePage(route, renderLayout({
-      title,
-      description: item.summary,
-      route,
-      breadcrumbs,
-      keywords: buildKeywords(route, [item.category, item.title]),
-      type: 'article',
-      extraHead: `<meta property="article:published_time" content="${normalizeDate(item.date)}">\n  <meta property="article:modified_time" content="${normalizeDate(item.date)}">`,
-      schemas: articleSchemas,
-      body: `
-      <section class="page-hero">
-        <div class="container">
-          <div class="section-shell">
-            <div class="news-meta"><span class="badge">${escapeHtml(item.category)}</span><time datetime="${escapeHtml(item.date)}">${escapeHtml(item.date)}</time></div>
-            <h1>${escapeHtml(item.title)}</h1>
-            <p class="lead">${escapeHtml(item.summary)}</p>
-          </div>
-        </div>
-      </section>
-      <section class="page-body">
-        <div class="container">
-          <article class="article-shell article-content">
-            ${item.content.map(paragraph => `<p>${linkifyPhoneText(paragraph)}</p>`).join('')}
-            <div class="cta">预约与咨询电话<strong>${renderPhoneLink({ label: site.phone })}</strong></div>
-          </article>
-          <div class="section" style="padding-top:16px;">
-            <div class="news-list">
-              ${prev ? `<article class="news-card"><div class="news-meta"><span>上一篇</span></div><h3><a href="${relative(route, `/news/${prev.slug}/`)}">${escapeHtml(prev.title)}</a></h3></article>` : ''}
-              ${next ? `<article class="news-card"><div class="news-meta"><span>下一篇</span></div><h3><a href="${relative(route, `/news/${next.slug}/`)}">${escapeHtml(next.title)}</a></h3></article>` : ''}
-            </div>
-          </div>
-        </div>
-      </section>`
-    }));
-  });
-}
-
-function renderPagination(totalPages, currentPage, currentRoute) {
-  if (totalPages <= 1) return '';
-  const links = [];
-  for (let page = 1; page <= totalPages; page++) {
-    const href = page === 1 ? '/news/' : `/news/page/${page}/`;
-    links.push(page === currentPage ? `<span class="current">${page}</span>` : `<a href="${relative(currentRoute, href)}">${page}</a>`);
-  }
-  return `<div class="pagination" aria-label="新闻分页">${links.join('')}</div>`;
-}
-
 function renderSitemap() {
-  const articleDates = new Map(news.map(item => [`/news/${item.slug}/`, item.date]));
   const urls = ['/']
-    .concat(site.sections.map(section => `/${section.slug}/`))
-    .concat(['/news/'])
-    .concat(news.map(item => `/news/${item.slug}/`))
-    .concat(Array.from({ length: Math.max(0, Math.ceil(news.length / perPage) - 1) }, (_, idx) => `/news/page/${idx + 2}/`));
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(url => `  <url><loc>${pageUrl(url)}</loc><lastmod>${normalizeDate(articleDates.get(url) || lastModified)}</lastmod></url>`).join('\n')}\n</urlset>`;
-}
-
-function renderFeed() {
-  const items = news.slice(0, 20).map(item => `
-    <item>
-      <title><![CDATA[${item.title}]]></title>
-      <link>${pageUrl(`/news/${item.slug}/`)}</link>
-      <guid>${pageUrl(`/news/${item.slug}/`)}</guid>
-      <pubDate>${new Date(normalizeDate(item.date)).toUTCString()}</pubDate>
-      <description><![CDATA[${item.summary}]]></description>
-    </item>`).join('');
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0">
-  <channel>
-    <title><![CDATA[${site.siteName} 新闻资讯]]></title>
-    <link>${pageUrl('/')}</link>
-    <description><![CDATA[${site.seo.description}]]></description>
-    <language>zh-cn</language>
-    <lastBuildDate>${new Date(normalizeDate(lastModified)).toUTCString()}</lastBuildDate>${items}
-  </channel>
-</rss>`;
+    .concat(site.sections.map(section => `/${section.slug}/`));
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(url => `  <url><loc>${pageUrl(url)}</loc><lastmod>${normalizeDate(lastModified)}</lastmod></url>`).join('\n')}\n</urlset>`;
 }
 
 function renderCoverSvg() {
@@ -693,7 +522,7 @@ function renderRobots() {
 
 function renderNotFound() {
   const title = `页面不存在_${site.siteName}`;
-  const description = '访问的页面不存在，请返回首页或查看新闻资讯。';
+  const description = '访问的页面不存在，请返回首页或查看站内主要栏目。';
   return renderLayout({
     title,
     description,
@@ -709,10 +538,10 @@ function renderNotFound() {
           <div class="section-shell">
             <div class="eyebrow">404</div>
             <h1>页面不存在</h1>
-            <p class="lead">你访问的页面可能已调整。可以先回到首页，或查看新闻资讯与核心栏目。</p>
+            <p class="lead">你访问的页面可能已调整。可以先回到首页，或查看站内主要栏目。</p>
             <div class="hero-actions">
               <a class="btn btn-primary" href="./index.html">返回首页</a>
-              <a class="btn btn-secondary" href="./news/">查看新闻资讯</a>
+              <a class="btn btn-secondary" href="./about/">查看园区介绍</a>
             </div>
           </div>
         </div>
