@@ -40,6 +40,7 @@ const sectionCards = site.sections.filter(section => section.slug !== 'contact')
 writePage('/', renderHome());
 for (const section of site.sections) writePage(`/${section.slug}/`, renderSection(section));
 writeFile(path.join(dist, 'sitemap.xml'), renderSitemap());
+if (site.indexNowKey) writeFile(path.join(dist, `${site.indexNowKey}.txt`), `${site.indexNowKey}\n`);
 
 function readJson(file) {
   return JSON.parse(fs.readFileSync(file, 'utf8').replace(/^\uFEFF/, ''));
