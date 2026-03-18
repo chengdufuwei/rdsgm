@@ -221,6 +221,7 @@ function renderLayout({
   <meta name="robots" content="${escapeHtml(robots)}">
   <meta name="author" content="${escapeHtml(site.siteName)}">
   <meta name="msvalidate.01" content="EF97D2F4FBAE4900F130603B1041945A">
+  <meta name="baidu-site-verification" content="codeva-Y1UlERPi0Z" />
   <link rel="canonical" href="${escapeHtml(canonicalUrl)}">
   <meta property="og:locale" content="zh_CN">
   <meta property="og:type" content="${type}">
