@@ -128,11 +128,16 @@ function linkifyPhoneText(text) {
 function relative(fromRoute, toRoute) {
   const fromSegments = (fromRoute === '/' ? '/' : `${fromRoute}`).split('/').filter(Boolean);
   const toSegments = toRoute.split('/').filter(Boolean);
+  const preserveTrailingSlash = toRoute.endsWith('/');
   let i = 0;
   while (i < fromSegments.length && i < toSegments.length && fromSegments[i] === toSegments[i]) i++;
   const up = new Array(Math.max(fromSegments.length - i, 0)).fill('..');
   const down = toSegments.slice(i);
-  return [...up, ...down].join('/') || '.';
+  const result = [...up, ...down].join('/') || '.';
+  if (preserveTrailingSlash && result !== '.' && !result.endsWith('/')) {
+    return `${result}/`;
+  }
+  return result;
 }
 
 function buildKeywords(route, extra = []) {
