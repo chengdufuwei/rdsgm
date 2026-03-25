@@ -14,7 +14,7 @@ const sectionIconMap = {
   contact: 'section-contact'
 };
 const quickHighlights = [
-  { icon: 'quick-visit', title: '预约看墓', text: '实地考察全程免费。' },
+  { icon: 'quick-visit', title: '现场看墓', text: '实地考察全程免费。' },
   { icon: 'quick-guide', title: '现场选购', text: '选购墓型全程陪同。' },
   { icon: 'quick-offer', title: '惠民便民', text: '惠民便民，折上有礼。' },
   { icon: 'quick-service', title: '一对一服务', text: '一对一精准服务。' },
@@ -136,7 +136,7 @@ function relative(fromRoute, toRoute) {
 }
 
 function buildKeywords(route, extra = []) {
-  const base = [site.siteName, `${site.city}公墓`, '燃灯寺公墓', '公墓预约', '陵园资讯'];
+  const base = [site.siteName, '燃灯寺公墓服务中心', '燃灯寺公墓', `${site.city}燃灯寺公墓`, `${site.city}公墓`, '陵园资讯'];
   const dynamic = site.sections.map(section => section.title);
   return Array.from(new Set(base.concat(dynamic, extra).filter(Boolean))).join(',');
 }
@@ -269,6 +269,7 @@ function renderLayout({
 }
 
 function renderHome() {
+  const metaDescription = site.seo.metaDescription || site.seo.description;
   const cards = sectionCards.map(section => `
     <a class="card card-link-block" href="${relative('/', `/${section.slug}/`)}">
       <img class="card-icon" src="${relative('/', `/assets/${sectionIconMap[section.slug] || 'section-service'}.svg`)}" alt="${escapeHtml(section.title)}图标" width="72" height="72">
@@ -284,20 +285,20 @@ function renderHome() {
 
   return renderLayout({
     title: site.seo.title,
-    description: site.seo.description,
+    description: metaDescription,
     route: '/',
     keywords: buildKeywords('/', ['购墓流程', '墓型价格']),
-    schemas: baseSchemas('/', site.seo.title, site.seo.description, []),
+    schemas: baseSchemas('/', site.seo.title, metaDescription, []),
     body: `
       <section class="hero">
         <div class="container hero-grid">
           <div class="hero-copy">
             <div class="eyebrow">成都 · 龙泉驿区</div>
-            <h1>燃灯寺公墓预约服务中心</h1>
-            <p class="lead">成都燃灯寺公墓预约咨询热线：138-0801-1743。提供免费专车接送看墓服务，地址位于成都市龙泉驿区同安街道同兴村10组。</p>
+            <h1>燃灯寺公墓销售服务中心</h1>
+            <p class="lead">成都燃灯寺公墓销售咨询热线：138-0801-1743。提供免费专车接送看墓服务，地址位于成都市龙泉驿区同安街道同兴村10组。</p>
             <div class="hero-actions">
               <a class="btn btn-primary" href="${escapeHtml(phoneHref(site.phone))}">电话咨询 ${escapeHtml(site.phone)}</a>
-              <a class="btn btn-secondary" href="${relative('/', '/contact/')}">预约咨询</a>
+              <a class="btn btn-secondary" href="${relative('/', '/contact/')}">咨询服务</a>
             </div>
           </div>
           <aside class="hero-panel">
@@ -332,6 +333,7 @@ function renderHome() {
 
 function renderSection(section) {
   const route = `/${section.slug}/`;
+  const metaDescription = section.metaDescription || section.description;
   const breadcrumbs = [{ label: '首页', href: '/' }, { label: section.title, href: route }];
   const sceneryHero = section.slug === 'scenery' && section.heroImage
     ? `<figure class="scenery-hero"><img src="${relative(route, section.heroImage)}" alt="${escapeHtml(section.title)}横幅图" loading="eager"></figure>`
@@ -349,11 +351,11 @@ function renderSection(section) {
     : '';
   return renderLayout({
     title: `${section.title}_${site.siteName}`,
-    description: section.description,
+    description: metaDescription,
     route,
     breadcrumbs,
     keywords: buildKeywords(route, [section.title]),
-    schemas: baseSchemas(route, `${section.title}_${site.siteName}`, section.description, breadcrumbs),
+    schemas: baseSchemas(route, `${section.title}_${site.siteName}`, metaDescription, breadcrumbs),
     body: `
       <section class="page-hero">
         <div class="container">
@@ -371,7 +373,7 @@ function renderSection(section) {
             ${section.content.map(paragraph => `<p>${linkifyPhoneText(paragraph)}</p>`).join('')}
             ${sceneryGallery}
             ${pricingBlock}
-            <div class="cta">预约看墓与咨询请直接联系<strong>${renderPhoneLink({ label: site.phone })}</strong></div>
+            <div class="cta">看墓与咨询请直接联系<strong>${renderPhoneLink({ label: site.phone })}</strong></div>
           </article>
         </div>
       </section>`
