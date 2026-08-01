@@ -214,7 +214,7 @@ function renderLayout({
     ? `<div class="container breadcrumb">${breadcrumbs.map((crumb, idx) => idx === breadcrumbs.length - 1 ? `<span>${crumb.label}</span>` : `<a href="${relative(route, crumb.href)}">${crumb.label}</a>`).join(' / ')}</div>`
     : '';
   const schemaBlocks = schemas.map(schema => `<script type="application/ld+json">${serializeJsonLd(schema)}</script>`).join('\n  ');
-  const mobilePhoneBar = `<div class="mobile-callbar"><a class="mobile-callbar-link" href="${escapeHtml(phoneHref(site.phone))}">电话咨询 ${escapeHtml(site.phone)}</a></div>`;
+  const mobilePhoneBar = `<div class="mobile-callbar"><a class="mobile-callbar-link" href="${relative(route, '/contact/')}">看墓与预约咨询</a></div>`;
   return `<!doctype html>
 <html lang="zh-CN">
 <head>
@@ -263,8 +263,8 @@ function renderLayout({
         <span>${escapeHtml(site.address)}</span>
       </div>
       <div>
-        预约热线<br>
-        <strong style="color:var(--brand-deep);font-size:1.15rem;">${renderPhoneLink({ className: 'phone-link' })}</strong>
+        看墓与安葬咨询<br>
+        <a class="phone-link" href="${relative(route, '/contact/')}">咨询服务中心</a>
       </div>
     </div>
   </footer>
@@ -302,7 +302,7 @@ function renderHome() {
             <h1>燃灯寺公墓销售服务中心</h1>
             <p class="lead">成都燃灯寺公墓销售服务中心提供免费专车接送看墓服务与全程选墓指导，地址位于成都市龙泉驿区同安街道同兴村10组。</p>
             <div class="hero-actions">
-              <a class="btn btn-primary" href="${escapeHtml(phoneHref(site.phone))}">电话咨询 (138-0801-1743)</a>
+              <a class="btn btn-primary" href="${relative('/', '/contact/')}">预约看墓 / 咨询</a>
               <a class="btn btn-secondary" href="${relative('/', '/contact/')}">咨询服务</a>
             </div>
           </div>
@@ -354,6 +354,10 @@ function renderSection(section) {
         ${Array.isArray(section.priceNotice) ? `<div class="pricing-note">${section.priceNotice.map(line => `<p>${linkifyPhoneText(line)}</p>`).join('')}</div>` : ''}
       </div>`
     : '';
+  const ctaBlock = section.slug === 'contact'
+    ? `<div class="cta">看墓与咨询请直接联系<strong>${renderPhoneLink({ label: site.phone })}</strong></div>`
+    : `<div class="cta">如需了解更多园区信息或预约免费看墓专车，请联系 <a href="${relative(route, '/contact/')}"><strong>咨询服务中心</strong></a></div>`;
+
   return renderLayout({
     title: `${section.title}_${site.siteName}`,
     description: metaDescription,
@@ -378,7 +382,7 @@ function renderSection(section) {
             ${section.content.map(paragraph => `<p>${linkifyPhoneText(paragraph)}</p>`).join('')}
             ${sceneryGallery}
             ${pricingBlock}
-            <div class="cta">看墓与咨询请直接联系<strong>${renderPhoneLink({ label: site.phone })}</strong></div>
+            ${ctaBlock}
           </article>
         </div>
       </section>`
