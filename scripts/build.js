@@ -31,6 +31,10 @@ fs.mkdirSync(dist, { recursive: true });
 writeFile(path.join(dist, 'assets', 'styles.css'), styles);
 writeFile(path.join(dist, 'assets', 'cover-seo.svg'), renderCoverSvg());
 copyStaticDir(sceneryDir, path.join(dist, 'assets', 'scenery'));
+if (fs.existsSync(path.join(src, 'assets', 'hero-entrance.jpg'))) {
+  fs.mkdirSync(path.join(dist, 'assets'), { recursive: true });
+  fs.copyFileSync(path.join(src, 'assets', 'hero-entrance.jpg'), path.join(dist, 'assets', 'hero-entrance.jpg'));
+}
 writeGeneratedIcons();
 writeFile(path.join(dist, 'robots.txt'), renderRobots());
 writeFile(path.join(dist, '404.html'), renderNotFound());
@@ -214,7 +218,7 @@ function renderLayout({
     ? `<div class="container breadcrumb">${breadcrumbs.map((crumb, idx) => idx === breadcrumbs.length - 1 ? `<span>${crumb.label}</span>` : `<a href="${relative(route, crumb.href)}">${crumb.label}</a>`).join(' / ')}</div>`
     : '';
   const schemaBlocks = schemas.map(schema => `<script type="application/ld+json">${serializeJsonLd(schema)}</script>`).join('\n  ');
-  const mobilePhoneBar = `<div class="mobile-callbar"><a class="mobile-callbar-link" href="${relative(route, '/contact/')}">看墓与预约咨询</a></div>`;
+  const mobilePhoneBar = `<div class="mobile-callbar"><a class="mobile-callbar-link" href="${escapeHtml(phoneHref(site.phone))}">电话咨询 138-0801-1743</a></div>`;
   return `<!doctype html>
 <html lang="zh-CN">
 <head>
@@ -302,7 +306,7 @@ function renderHome() {
             <h1>燃灯寺公墓销售服务中心</h1>
             <p class="lead">成都燃灯寺公墓销售服务中心提供免费专车接送看墓服务与全程选墓指导，地址位于成都市龙泉驿区同安街道同兴村10组。</p>
             <div class="hero-actions">
-              <a class="btn btn-primary" href="${relative('/', '/contact/')}">预约看墓 / 咨询</a>
+              <a class="btn btn-primary" href="${escapeHtml(phoneHref(site.phone))}">电话咨询 138-0801-1743</a>
               <a class="btn btn-secondary" href="${relative('/', '/contact/')}">咨询服务</a>
             </div>
           </div>
@@ -313,6 +317,12 @@ function renderHome() {
               <li>支持提前预约免费看墓专车接送。</li>
             </ul>
           </aside>
+        </div>
+        <div class="container">
+          <figure class="hero-banner-figure">
+            <img src="${relative('/', '/assets/hero-entrance.jpg')}" alt="成都燃灯寺公墓销售服务中心大门头与服务大楼实景" loading="eager" width="1200" height="675">
+            <figcaption>成都燃灯寺公墓销售服务中心大门头与大办公室实景</figcaption>
+          </figure>
         </div>
       </section>
       <section class="section">
