@@ -320,8 +320,8 @@ function renderHome() {
         </div>
         <div class="container">
           <figure class="hero-banner-figure">
-            <img src="${relative('/', '/assets/hero-entrance.jpg')}" alt="成都燃灯寺公墓销售服务中心大门头与服务大楼实景" loading="eager" width="1200" height="675">
-            <figcaption>成都燃灯寺公墓销售服务中心大门头与大办公室实景</figcaption>
+            <img src="${relative('/', '/assets/hero-entrance.jpg')}" alt="成都燃灯寺公墓大门头与服务大楼实景" loading="eager" width="1200" height="675">
+            <figcaption>成都燃灯寺公墓大门头与服务大楼实景</figcaption>
           </figure>
         </div>
       </section>
