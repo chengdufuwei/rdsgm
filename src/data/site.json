@@ -42,16 +42,16 @@
       "title": "陵园景观",
       "description": "燃灯寺公墓园区实景展示：背靠龙泉山脉，面向玉带湖，环境优美、风水极佳。欢迎在线或电话联系预约现场看墓。",
       "metaDescription": "燃灯寺公墓陵园景观页展示园区实景图片、墓区环境与看墓参考信息，可直观看到燃灯寺公墓周边景观、园区氛围与现场咨询看墓的主要内容。",
-      "heroImage": "/assets/scenery/header2.jpg",
+      "heroImage": "/assets/scenery/aerial-view.jpg",
       "gallery": [
-        { "src": "/assets/scenery/gongmu1.jpg", "alt": "燃灯寺公墓园区实景一" },
-        { "src": "/assets/scenery/gongmu2.jpg", "alt": "燃灯寺公墓园区实景二" },
-        { "src": "/assets/scenery/gongmu3.jpg", "alt": "燃灯寺公墓园区实景三" },
-        { "src": "/assets/scenery/gongmu4.jpg", "alt": "燃灯寺公墓园区实景四" },
-        { "src": "/assets/scenery/gongmu5.jpg", "alt": "燃灯寺公墓园区实景五" },
-        { "src": "/assets/scenery/gongmu6.jpg", "alt": "燃灯寺公墓园区实景六" },
-        { "src": "/assets/scenery/gongmu7.jpg", "alt": "燃灯寺公墓园区实景七" },
-        { "src": "/assets/scenery/gongmu8.jpg", "alt": "燃灯寺公墓园区实景八" }
+        { "src": "/assets/scenery/aerial-view.jpg", "alt": "燃灯寺公墓陵园全景航拍实景" },
+        { "src": "/assets/hero-entrance.jpg", "alt": "燃灯寺公墓迎宾红地毯主通道实景" },
+        { "src": "/assets/scenery/green-cemetery.jpg", "alt": "燃灯寺公墓靠山绿化墓区实景" },
+        { "src": "/assets/scenery/red-wall-gate.jpg", "alt": "燃灯寺公墓正门红墙牌坊实景" },
+        { "src": "/assets/scenery/incense-burner.jpg", "alt": "燃灯寺公墓宝鼎香炉实景" },
+        { "src": "/assets/scenery/gongmu1.jpg", "alt": "燃灯寺公墓园区景观一" },
+        { "src": "/assets/scenery/gongmu3.jpg", "alt": "燃灯寺公墓园区景观二" },
+        { "src": "/assets/scenery/gongmu6.jpg", "alt": "燃灯寺公墓园区景观三" }
       ],
       "content": [
         "陵园景观鉴赏。",
