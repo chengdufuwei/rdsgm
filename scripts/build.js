@@ -123,7 +123,11 @@ function renderPhoneLink({ phone = site.phone, label = phone, className = '' }) 
 }
 
 function linkifyPhoneText(text) {
-  return escapeHtml(text);
+  if (!site.phone) return escapeHtml(text);
+  return escapeHtml(text).replaceAll(
+    escapeHtml(site.phone),
+    renderPhoneLink({ label: site.phone })
+  );
 }
 
 function relative(fromRoute, toRoute) {
@@ -154,6 +158,7 @@ function baseSchemas(route, title, description, breadcrumbs) {
       '@type': 'Organization',
       name: site.siteName,
       url: pageUrl('/'),
+      telephone: site.phone,
       address: {
         '@type': 'PostalAddress',
         addressLocality: site.city,
@@ -214,7 +219,9 @@ function renderLayout({
     ? `<div class="container breadcrumb">${breadcrumbs.map((crumb, idx) => idx === breadcrumbs.length - 1 ? `<span>${crumb.label}</span>` : `<a href="${relative(route, crumb.href)}">${crumb.label}</a>`).join(' / ')}</div>`
     : '';
   const schemaBlocks = schemas.map(schema => `<script type="application/ld+json">${serializeJsonLd(schema)}</script>`).join('\n  ');
-  const mobilePhoneBar = `<div class="mobile-callbar"><a class="mobile-callbar-link" href="${relative(route, '/contact/')}">到园区看看</a></div>`;
+  const mobilePhoneBar = site.phone
+    ? `<div class="mobile-callbar"><a class="mobile-callbar-link" href="${escapeHtml(phoneHref(site.phone))}">电话咨询 138-0801-1743</a></div>`
+    : `<div class="mobile-callbar"><a class="mobile-callbar-link" href="${relative(route, '/contact/')}">到园区看看</a></div>`;
   return `<!doctype html>
 <html lang="zh-CN">
 <head>
@@ -264,7 +271,7 @@ function renderLayout({
       </div>
       <div>
         到园看墓与安葬咨询<br>
-        <a class="phone-link" href="${relative(route, '/contact/')}">咨询服务中心</a>
+        <a class="phone-link" href="${escapeHtml(phoneHref(site.phone))}">${escapeHtml(site.phone)}</a>
       </div>
     </div>
   </footer>
@@ -302,8 +309,8 @@ function renderHome() {
             <h1>燃灯寺公墓销售服务中心</h1>
             <p class="lead">成都燃灯寺公墓销售服务中心提供免费专车接送看墓服务与全程选墓指导，地址位于成都市龙泉驿区同安街道同兴村10组。</p>
             <div class="hero-actions">
-              <a class="btn btn-primary" href="${relative('/', '/contact/')}">到园区看看</a>
-              <a class="btn btn-secondary" href="${relative('/', '/scenery/')}">陵园景观</a>
+              <a class="btn btn-primary" href="${escapeHtml(phoneHref(site.phone))}">电话咨询 138-0801-1743</a>
+              <a class="btn btn-secondary" href="${relative('/', '/contact/')}">咨询服务</a>
             </div>
           </div>
           <aside class="hero-panel">
@@ -361,7 +368,9 @@ function renderSection(section) {
         ${Array.isArray(section.priceNotice) ? `<div class="pricing-note">${section.priceNotice.map(line => `<p>${linkifyPhoneText(line)}</p>`).join('')}</div>` : ''}
       </div>`
     : '';
-  const ctaBlock = `<div class="cta">如需了解更多园区信息或预约免费看墓专车，请前往 <a href="${relative(route, '/contact/')}"><strong>咨询服务页面</strong></a></div>`;
+  const ctaBlock = section.slug === 'contact'
+    ? `<div class="cta">看墓与咨询请直接联系 <strong>${renderPhoneLink({ label: site.phone })}</strong></div>`
+    : `<div class="cta">如需了解更多园区信息或预约免费看墓专车，请联系 <a href="${relative(route, '/contact/')}"><strong>咨询服务中心</strong></a> 或致电 <strong>${renderPhoneLink({ label: site.phone })}</strong></div>`;
 
   return renderLayout({
     title: `${section.title}_${site.siteName}`,
@@ -409,6 +418,7 @@ function renderCoverSvg() {
     + `<text x="88" y="220" font-family="Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="34" fill="#8a2e1d">燃灯寺公墓</text>`
     + `<text x="88" y="320" font-family="Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="74" font-weight="700" fill="#1f1b17">${escapeHtml(site.siteName)}</text>`
     + `<text x="88" y="392" font-family="Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="30" fill="#6f6459">${escapeHtml(site.tagline)}</text>`
+    + `<text x="88" y="482" font-family="Segoe UI, PingFang SC, Microsoft YaHei, sans-serif" font-size="32" fill="#642014">咨询电话 ${escapeHtml(site.phone)}</text>`
     + `</svg>`;
 }
 
